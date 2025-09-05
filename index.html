@@ -10,87 +10,269 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   <style>
-    :root{ --brand:#0ea5ff; --ink:#eaf2ff; --bg:#0b1220; --card:#10192e; --muted:#9db3cf; }
-    body{margin:0;background:linear-gradient(180deg,#0b1220,#08101f);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;}
+    :root{ --brand:#0ea5ff; --ink:#eaf2ff; --bg:#0b1220; --card:#10192e; --muted:#9db3cf; --ok:#22c55e; --warn:#fbbf24; --no:#ef4444; }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth; max-width:100%; overflow-x:hidden;}
+    body{margin:0;background:linear-gradient(180deg,#0b1220,#08101f);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;max-width:100%;overflow-x:hidden;}
     header{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid #1e2a44;background:#0b1220;position:sticky;top:0;z-index:10}
-    .logo{display:flex;align-items:center;gap:10px;font-weight:800}
+    .logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.6px}
     .logo img{width:34px;height:34px;border-radius:7px}
     .wrap{max-width:1200px;margin:0 auto;padding:18px}
     .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
     @media(max-width:980px){.grid{grid-template-columns:1fr}}
-    .card{background:#10192e;border:1px solid #1e2a44;border-radius:18px;padding:16px 16px 12px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-    .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:12px;cursor:pointer;border:1px solid #2a3d66;background:#0e1b38;color:var(--ink)}
-    .btn.primary{background:linear-gradient(180deg,#0ea5ff,#0075ff);color:#051027;font-weight:700;border:none}
-    .preview{white-space:pre-wrap;background:#0a1226;border:1px dashed #30456f;border-radius:12px;padding:12px;overflow-wrap:anywhere}
-    .pill{display:inline-flex;align-items:center;gap:8px;background:#0a1330;border:1px solid #203154;border-radius:999px;padding:6px 10px;font-size:12px}
+    .card{background:var(--card);border:1px solid #1e2a44;border-radius:18px;padding:16px 16px 12px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    h2{margin:4px 0 12px 0;font-size:18px;letter-spacing:.3px}
+    label{font-size:13px;color:var(--muted)}
+    input,select,textarea{width:100%;background:#0c1530;border:1px solid #233355;color:var(--ink);padding:12px 12px;border-radius:12px;font-size:14px}
+    textarea{min-height:92px;resize:vertical}
+    .row{display:grid;grid-template-columns:repeat(12,1fr);gap:10px;margin-bottom:10px}
+    .col-6{grid-column:span 6}.col-4{grid-column:span 4}.col-8{grid-column:span 8}
+    .col-3{grid-column:span 3}.col-12{grid-column:span 12}.col-2{grid-column:span 2}
+    .row > *, .grid > * {min-width:0;}
+    .pill{display:inline-flex;align-items:center;gap:8px;background:#0a1330;border:1px solid #203154;border-radius:999px;padding:8px 12px;font-size:12px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid #2a3d66;background:linear-gradient(180deg,#0e1b38,#0d1a33);padding:10px 14px;border-radius:12px;color:var(--ink);text-decoration:none;cursor:pointer}
+    .btn:hover{border-color:#32508e}
+    .btn.primary{background:linear-gradient(180deg,#0ea5ff,#0075ff);color:#051027;border-color:transparent;font-weight:700}
+    .btn.ghost{background:transparent}
+    .actions{display:flex;flex-wrap:wrap;gap:10px}
+    .muted{color:var(--muted)}
     .hr{height:1px;background:#1e2a44;margin:12px 0}
+    .preview{white-space:pre-wrap;background:#0a1226;border:1px dashed #30456f;border-radius:12px;padding:12px;overflow-wrap:anywhere;word-break:break-word;max-width:100%;}
+    .footer{font-size:12px;color:var(--muted);text-align:center;margin:18px 0}
+    .linkish{color:var(--ink);opacity:.9}
+    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .kpi{background:#0c1630;border:1px solid #22345a;border-radius:12px;padding:10px;cursor:pointer}
+    .kpi b{font-size:18px}
+    .centered{display:flex;align-items:center;justify-content:center;min-height:55vh;flex-direction:column;gap:12px;text-align:center}
+    .login-card input{max-width:340px;margin:0 auto;display:block}
+    @media print{header,.no-print{display:none !important} body{background:#fff;color:#000} .card{border:none;box-shadow:none} .preview{background:#fff;border:1px solid #ccc} }
+    dialog{background:#0c1530;border:1px solid #2a3d66;color:var(--ink);border-radius:14px;max-width:720px}
+    a.link{color:#9ecbff}
   </style>
 </head>
 <body>
 <header>
-  <div class="logo">
+  <div class="logo" aria-label="Danbury Wheel Chair Service">
     <img src="./icons/icon-192.png" alt="DW"/>
     <div>
-      <div>Danbury Wheel Chair Service</div>
+      <div style="font-size:15px;line-height:1">Danbury Wheel Chair Service</div>
       <div class="pill" id="rolePill">—</div>
     </div>
   </div>
-  <div style="margin-left:auto;display:flex;gap:10px">
-    <button id="btnInstall" class="btn">Install</button>
-    <select id="langSel" class="btn">
+  <div style="margin-left:auto;display:flex;align-items:center;gap:10px" class="no-print">
+    <button id="btnInstall" class="btn" data-i18n="install">Install</button>
+    <select id="langSel" class="btn" aria-label="Language">
       <option value="auto">🌐 Auto</option><option value="es">ES</option><option value="en">EN</option>
     </select>
-    <button id="btnSignOut" class="btn" style="display:none">Sign out</button>
+    <button id="btnSignOut" class="btn" style="display:none" data-i18n="signout">Sign out</button>
   </div>
 </header>
 
 <div class="wrap">
-  <!-- Login -->
-  <section id="sectionAuth" class="card" style="display:none;text-align:center">
-    <img src="./icons/icon-192.png" width="72" height="72"/>
-    <h2 id="welcomeTitle"></h2>
-    <div id="welcomeSub"></div>
-    <input id="email" placeholder="Email" style="display:block;margin:10px auto"/>
-    <input id="password" placeholder="Password" type="password" style="display:block;margin:10px auto"/>
-    <button id="btnSignIn" class="btn primary"></button>
+  <!-- Landing / Login -->
+  <section id="sectionAuth" class="card centered login-card" style="display:none">
+    <img src="./icons/icon-192.png" width="72" height="72" alt="DW"/>
+    <h2 id="welcomeTitle" data-i18n="welcome">Welcome</h2>
+    <div class="muted" id="welcomeSub" data-i18n="signin">Sign in to continue</div>
+    <div class="row" style="max-width:380px;width:100%">
+      <div class="col-12"><input id="email" placeholder="email" autocomplete="username"/></div>
+      <div class="col-12"><input id="password" placeholder="password" type="password" autocomplete="current-password"/></div>
+      <div class="col-12 actions"><button id="btnSignIn" class="btn primary" style="width:100%" data-i18n="signin">Sign in</button></div>
+    </div>
+    <div class="muted" style="margin-top:10px" id="companyFooter">© 2025 Danbury Wheel Chair Service · On time, every time! · (203) 748 3433 · www.danburywheelchairservice.com</div>
   </section>
 
   <!-- Dispatcher UI -->
   <div id="dispatcherUI" style="display:none">
-    <section class="card">
-      <h2 id="title_form"></h2>
-      <label id="lbl_client"></label><input id="clientName"/><br/>
-      <label id="lbl_client_phone"></label><input id="clientContact"/><br/>
-      <label id="lbl_pick"></label><input id="from"/><br/>
-      <label id="lbl_drop"></label><input id="to"/><br/>
-      <label id="lbl_passenger"></label><input id="passenger"/><br/>
-      <label id="lbl_price"></label><input id="price"/><br/>
-      <label id="lbl_driver"></label><select id="driverSel"></select><br/>
-      <div class="hr"></div>
-      <button id="btnPreview" class="btn">📄</button>
-      <button id="btnSendDriver" class="btn primary">📨</button>
-      <div class="hr"></div>
-      <div id="preview" class="preview"></div>
-    </section>
+    <div class="grid">
+      <section class="card" id="formCard">
+        <h2 id="title_form" data-i18n="new_dispatch">New dispatch</h2>
+        <div class="row">
+          <div class="col-6">
+            <label id="lbl_client" data-i18n="client">Client / Requester</label>
+            <input id="clientName" />
+          </div>
+          <div class="col-6">
+            <label id="lbl_client_phone" data-i18n="client_phone">Client phone/email</label>
+            <input id="clientContact" />
+          </div>
+          <div class="col-8">
+            <label id="lbl_pick" data-i18n="pick">Pickup (origin)</label>
+            <input id="from" />
+          </div>
+          <div class="col-4">
+            <label id="lbl_pick_time" data-i18n="pick_time">Date/Time</label>
+            <input id="pickupAt" type="datetime-local"/>
+          </div>
+          <div class="col-12">
+            <label id="lbl_drop" data-i18n="drop">Dropoff (destination)</label>
+            <input id="to" />
+          </div>
+          <div class="col-6">
+            <label id="lbl_passenger" data-i18n="passenger">Passenger</label>
+            <input id="passenger" />
+          </div>
+          <div class="col-2">
+            <label id="lbl_age" data-i18n="age">Age</label>
+            <input id="age" type="number" min="0" max="120"/>
+          </div>
+          <div class="col-4">
+            <label id="lbl_companions" data-i18n="companions">Companions</label>
+            <input id="companions" type="number" min="0" value="0"/>
+          </div>
+          <div class="col-12">
+            <label id="lbl_needs" data-i18n="needs">Needs / Accessibility</label>
+            <div class="row">
+              <div class="col-4"><label class="pill"><input type="checkbox" id="needWheel"/> <span data-i18n="need_wheel">Wheelchair</span></label></div>
+              <div class="col-4"><label class="pill"><input type="checkbox" id="needBari"/> <span data-i18n="need_bari">Bariatric chair</span></label></div>
+              <div class="col-4"><label class="pill"><input type="checkbox" id="needStret"/> <span data-i18n="need_stret">Stretcher</span></label></div>
+              <div class="col-4"><label class="pill"><input type="checkbox" id="needOxy"/> <span data-i18n="need_oxy">Oxygen</span></label></div>
+              <div class="col-8"><label class="pill"><input type="checkbox" id="needExtra"/> <span data-i18n="need_extra">Extra staff</span></label></div>
+            </div>
+          </div>
+          <div class="col-4">
+            <label id="lbl_floor" data-i18n="floor">Destination floor</label>
+            <input id="floor" type="number" min="0" value="0"/>
+          </div>
+          <div class="col-4">
+            <label id="lbl_no_elev" data-i18n="no_elev">No elevator?</label>
+            <select id="noElev"><option value="no" data-i18n="no">No</option><option value="yes" data-i18n="yes">Yes</option></select>
+          </div>
+          <div class="col-4">
+            <label id="lbl_steps" data-i18n="steps"># steps</label>
+            <input id="steps" type="number" min="0" value="0"/>
+          </div>
+          <div class="col-4">
+            <label id="lbl_price" data-i18n="price">Price (USD)</label>
+            <input id="price" type="number" min="0" step="0.01"/>
+          </div>
+          <div class="col-8">
+            <label id="lbl_notes" data-i18n="notes">Notes</label>
+            <input id="notes" />
+          </div>
+          <div class="col-12">
+            <label id="lbl_driver" data-i18n="driver">Driver / Vehicle</label>
+            <select id="driverSel"></select>
+            <div class="muted" id="driverInfo"></div>
+          </div>
+        </div>
+        <div class="actions no-print">
+          <button class="btn" id="btnPreview">📄 <span data-i18n="generate">Generate summary</span></button>
+          <button class="btn primary" id="btnSendDriver">📨 <span data-i18n="send">Send to driver</span></button>
+          <a class="btn" id="btnMap" target="_self"><span data-i18n="open_map">Open map</span></a>
+          <button class="btn" id="btnClientData"><span data-i18n="client_data">Client data</span></button>
+          <button class="btn ghost" id="btnPrint" data-i18n="print">Print</button>
+          <button class="btn" id="btnBackup" data-i18n="backup">Set backup</button>
+          <button class="btn" id="btnSaveNow" data-i18n="save_now">Save now</button>
+        </div>
+        <div class="hr"></div>
+        <div>
+          <label class="muted" id="lbl_preview" data-i18n="preview">Message preview</label>
+          <div id="preview" class="preview"></div>
+        </div>
+      </section>
+
+      <aside class="card">
+        <h2 id="title_fleet" data-i18n="drivers">Drivers</h2>
+        <div id="fleetList"></div>
+        <div class="hr"></div>
+        <div class="kpis">
+          <div class="kpi" id="kpiTodayCard"><div class="muted" id="kpi_today" data-i18n="jobs_today">Jobs today</div><b id="kpiToday">0</b></div>
+          <div class="kpi" id="kpiPendingCard"><div class="muted" id="kpi_pending" data-i18n="scheduled">Scheduled</div><b id="kpiPending">0</b></div>
+          <div class="kpi"><div class="muted" id="kpi_drivers" data-i18n="drivers">Drivers</div><b id="kpiDrivers">—</b></div>
+        </div>
+      </aside>
+    </div>
   </div>
 
   <!-- Driver UI -->
   <div id="driverUI" style="display:none">
     <section class="card">
-      <h2 id="drv_title"></h2>
-      <div class="pill" id="drv_done_lbl"></div>
-      <div class="pill" id="drv_sched_lbl"></div>
+      <h2 id="drv_title" data-i18n="my_jobs">My jobs</h2>
+      <div class="actions">
+        <span class="pill">✅ <b id="drv_done_lbl" data-i18n="trips_done">Trips done</b>: <span id="drv_done_count">0</span></span>
+        <span class="pill">🗓️ <b id="drv_sched_lbl" data-i18n="trips_sched">Scheduled</b>: <span id="drv_sched_count">0</span></span>
+      </div>
       <div class="hr"></div>
-      <div><h3 id="todayLbl"></h3><div id="drv_today" class="preview"></div></div>
-      <div><h3 id="upcomingLbl"></h3><div id="drv_upcoming" class="preview"></div></div>
+      <div class="row">
+        <div class="col-12">
+          <h3 data-i18n="today">Today</h3>
+          <div id="drv_today" class="preview">(empty)</div>
+        </div>
+        <div class="col-12">
+          <h3 data-i18n="upcoming">Upcoming</h3>
+          <div id="drv_upcoming" class="preview">(empty)</div>
+        </div>
+      </div>
     </section>
   </div>
+
+  <div class="footer no-print">© 2025 Danbury Wheel Chair Service • <a class="linkish" href="#" id="openHowTo" data-i18n="how_to_install">How to install</a></div>
 </div>
 
+<!-- How to install -->
+<dialog id="howTo">
+  <form method="dialog" style="margin:0">
+    <div style="padding:16px 16px 4px"><b data-i18n="howto_title">Install on iPhone/iPad</b></div>
+    <div style="padding:0 16px 12px" class="muted" id="howto_body">1) Open in Safari · 2) Tap <b>Share</b> · 3) <b>Add to Home Screen</b> · 4) Confirm.</div>
+    <div style="display:flex;justify-content:flex-end;padding:0 12px 12px"><button class="btn" data-i18n="ok">OK</button></div>
+  </form>
+</dialog>
+
+<!-- KPI list -->
+<dialog id="listDlg">
+  <form method="dialog" style="margin:0">
+    <div style="padding:16px 16px 4px"><b id="listDlgTitle">Items</b></div>
+    <div style="padding:0 16px 12px; max-height:50vh; overflow:auto">
+      <div id="listDlgBody" class="preview"></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;padding:0 12px 12px"><button class="btn" data-i18n="close">Close</button></div>
+  </form>
+</dialog>
+
+<!-- Client data -->
+<dialog id="clientDlg">
+  <form method="dialog" style="margin:0">
+    <div style="padding:16px 16px 4px"><b data-i18n="client_data">Client data</b></div>
+    <div style="padding:0 16px 12px">
+      <div class="row">
+        <div class="col-12"><input id="clientSendTo" placeholder="WhatsApp (+1...), SMS (+1...), or email"/></div>
+        <div class="col-12 actions">
+          <button class="btn" id="sendToWA" data-i18n="send_whatsapp">Send WhatsApp</button>
+          <button class="btn" id="sendToSMS" data-i18n="send_sms">Send SMS</button>
+          <button class="btn" id="sendToEmail" data-i18n="send_email">Send Email</button>
+        </div>
+      </div>
+      <div id="clientPreview" class="preview"></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;padding:0 12px 12px"><button class="btn" data-i18n="close">Close</button></div>
+  </form>
+</dialog>
+
+<!-- Backup -->
+<dialog id="backupDlg">
+  <form method="dialog" style="margin:0">
+    <div style="padding:16px 16px 4px"><b data-i18n="backup">Set backup</b></div>
+    <div style="padding:0 16px 12px">
+      <p class="muted" data-i18n="backup_desc">Backups are stored on this device. You can export a JSON file anytime.</p>
+      <label class="pill"><input type="checkbox" id="autoSave"/> <span data-i18n="backup_auto">Auto‑save summaries</span></label>
+      <div class="hr"></div>
+      <div class="actions">
+        <button class="btn" id="btnExport" data-i18n="export_json">Export JSON</button>
+        <button class="btn" id="btnClearLocal" data-i18n="clear_local">Clear local</button>
+      </div>
+      <div class="muted" id="localInfo"></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;padding:0 12px 12px"><button class="btn" data-i18n="close">Close</button></div>
+  </form>
+</dialog>
+
 <script type="module">
+  // Firebase v10+ modular
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
   import { getFirestore, collection, addDoc, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-analytics.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBIBq4ZsRADoKRNoJZkNq-dLWirlSotIPc",
@@ -101,87 +283,389 @@
     appId: "1:559477235356:web:a311792f680f5fd5995759",
     measurementId: "G-CSRR8VWYFZ"
   };
+
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
+  try { getAnalytics(app); } catch(e) { /* analytics optional */ }
 
   const DISPATCHERS = ["donbeltranmusic@gmail.com"];
-  const DRIVERS = ["fmluisorlando@gmail.com"];
+  const DRIVERS = ["fmluisorlando@gmail.com"]; // default active driver
 
-  const STRINGS = {
+  const COMPANY = {
+    name: "Danbury Wheel Chair Service",
+    slogan: "On time, every time!",
+    phone: "(203) 748 3433",
+    web: "www.danburywheelchairservice.com"
+  };
+
+  // i18n dictionary
+  const STR = {
     en: {
-      welcome:"Welcome", signin:"Sign in to continue",
-      new_dispatch:"New dispatch", client:"Client", client_phone:"Client phone/email",
-      pick:"Pickup", drop:"Dropoff", passenger:"Passenger", price:"Price (USD)", driver:"Driver",
-      generate:"Generate summary", send:"Send to driver",
-      my_jobs:"My jobs", trips_done:"Trips done", trips_sched:"Scheduled",
-      today:"Today", upcoming:"Upcoming"
+      install:"Install", signout:"Sign out", welcome:"Welcome", signin:"Sign in to continue",
+      new_dispatch:"New dispatch", client:"Client / Requester", client_phone:"Client phone/email",
+      pick:"Pickup (origin)", pick_time:"Date/Time", drop:"Dropoff (destination)",
+      passenger:"Passenger", age:"Age", companions:"Companions", needs:"Needs / Accessibility",
+      need_wheel:"Wheelchair", need_bari:"Bariatric chair", need_stret:"Stretcher", need_oxy:"Oxygen", need_extra:"Extra staff",
+      floor:"Destination floor", no_elev:"No elevator?", steps:"# steps", price:"Price (USD)", notes:"Notes",
+      driver:"Driver / Vehicle", generate:"Generate summary", send:"Send to driver",
+      open_map:"Open map", client_data:"Client data", print:"Print", preview:"Message preview",
+      drivers:"Drivers", jobs_today:"Jobs today", scheduled:"Scheduled", my_jobs:"My jobs",
+      trips_done:"Trips done", trips_sched:"Scheduled", today:"Today", upcoming:"Upcoming",
+      how_to_install:"How to install", howto_title:"Install on iPhone/iPad",
+      howto_body:"1) Open in Safari · 2) Tap <b>Share</b> · 3) <b>Add to Home Screen</b> · 4) Confirm.",
+      ok:"OK", close:"Close",
+      dispatcher:"Dispatcher", driver_role:"Driver", user:"User",
+      alert_fill:"Complete origin and destination", alert_pick_driver:"Pick a driver",
+      saved:"Saved and sent to driver.", login_error:"Login error: ",
+      installed:"Installed",
+      backup:"Set backup", backup_desc:"Backups are stored on this device. You can export a JSON file anytime.", backup_auto:"Auto‑save summaries",
+      export_json:"Export JSON", clear_local:"Clear local",
+      send_whatsapp:"Send WhatsApp", send_sms:"Send SMS", send_email:"Send Email",
+      empty:"(empty)"
     },
     es: {
-      welcome:"Bienvenido", signin:"Inicia sesión para continuar",
-      new_dispatch:"Nuevo despacho", client:"Cliente", client_phone:"Teléfono/email del cliente",
-      pick:"Recoger", drop:"Destino", passenger:"Pasajero", price:"Precio (USD)", driver:"Conductor",
-      generate:"Generar resumen", send:"Enviar al conductor",
-      my_jobs:"Mis viajes", trips_done:"Viajes realizados", trips_sched:"Programados",
-      today:"Hoy", upcoming:"Próximos"
+      install:"Instalar", signout:"Cerrar sesión", welcome:"Bienvenido", signin:"Inicia sesión para continuar",
+      new_dispatch:"Nuevo despacho", client:"Cliente / Solicitante", client_phone:"Teléfono/correo del cliente",
+      pick:"Recogida (origen)", pick_time:"Fecha/Hora", drop:"Destino (llegada)",
+      passenger:"Pasajero", age:"Edad", companions:"Acompañantes", needs:"Necesidades / Accesibilidad",
+      need_wheel:"Silla de ruedas", need_bari:"Silla bariátrica", need_stret:"Camilla", need_oxy:"Oxígeno", need_extra:"Personal extra",
+      floor:"Piso de destino", no_elev:"¿Sin ascensor?", steps:"# escalones", price:"Precio (USD)", notes:"Notas",
+      driver:"Conductor / Vehículo", generate:"Generar resumen", send:"Enviar al conductor",
+      open_map:"Abrir mapa", client_data:"Datos del cliente", print:"Imprimir", preview:"Vista previa del mensaje",
+      drivers:"Conductores", jobs_today:"Despachos hoy", scheduled:"Programados", my_jobs:"Mis viajes",
+      trips_done:"Viajes realizados", trips_sched:"Programados", today:"Hoy", upcoming:"Próximos",
+      how_to_install:"Cómo instalar", howto_title:"Instalar en iPhone/iPad",
+      howto_body:"1) Abre en Safari · 2) Toca <b>Compartir</b> · 3) <b>Añadir a pantalla de inicio</b> · 4) Confirmar.",
+      ok:"OK", close:"Cerrar",
+      dispatcher:"Despachador", driver_role:"Conductor", user:"Usuario",
+      alert_fill:"Completa origen y destino", alert_pick_driver:"Selecciona un conductor",
+      saved:"Despacho guardado y enviado al conductor.", login_error:"Error de inicio de sesión: ",
+      installed:"Instalada",
+      backup:"Configurar respaldo", backup_desc:"Los respaldos se guardan en este dispositivo. Puedes exportar un archivo JSON cuando quieras.", backup_auto:"Auto‑guardar resúmenes",
+      export_json:"Exportar JSON", clear_local:"Borrar local",
+      send_whatsapp:"Enviar WhatsApp", send_sms:"Enviar SMS", send_email:"Enviar Email",
+      empty:"(vacío)"
     }
   };
-  function getLang(){const forced=localStorage.getItem('lang')||'auto';if(forced!=='auto') return forced;return (navigator.language||'en').startsWith('es')?'es':'en';}
-  function t(k){return STRINGS[getLang()][k]||k;}
-  function applyTexts(){
-    document.getElementById("welcomeTitle").textContent=t("welcome");
-    document.getElementById("welcomeSub").textContent=t("signin");
-    document.getElementById("btnSignIn").textContent=t("welcome");
-    document.getElementById("title_form").textContent=t("new_dispatch");
-    document.getElementById("lbl_client").textContent=t("client");
-    document.getElementById("lbl_client_phone").textContent=t("client_phone");
-    document.getElementById("lbl_pick").textContent=t("pick");
-    document.getElementById("lbl_drop").textContent=t("drop");
-    document.getElementById("lbl_passenger").textContent=t("passenger");
-    document.getElementById("lbl_price").textContent=t("price");
-    document.getElementById("lbl_driver").textContent=t("driver");
-    document.getElementById("btnPreview").textContent="📄 "+t("generate");
-    document.getElementById("btnSendDriver").textContent="📨 "+t("send");
-    document.getElementById("drv_title").textContent=t("my_jobs");
-    document.getElementById("drv_done_lbl").textContent=t("trips_done")+": 0";
-    document.getElementById("drv_sched_lbl").textContent=t("trips_sched")+": 0";
-    document.getElementById("todayLbl").textContent=t("today");
-    document.getElementById("upcomingLbl").textContent=t("upcoming");
+  function getLang(){
+    const forced = localStorage.getItem('tf_lang_forced');
+    if(forced && forced!=='auto') return forced;
+    return (navigator.language||'es').toLowerCase().startsWith('es') ? 'es' : 'en';
   }
-  applyTexts();
-  const sel=document.getElementById("langSel"); sel.value=localStorage.getItem('lang')||'auto';
-  sel.addEventListener("change",()=>{localStorage.setItem('lang',sel.value);location.reload();});
+  function t(k){ const lang=getLang(); return STR[lang][k] || STR.en[k] || k; }
+  function applyI18n(){
+    document.querySelectorAll('[data-i18n]').forEach(el=>{
+      const key = el.getAttribute('data-i18n');
+      el.innerHTML = t(key);
+    });
+    // placeholders
+    const placeholders = [
+      ['#email','email','correo'],
+      ['#password','password','contraseña'],
+      ['#clientName','Name and phone','Nombre y teléfono'],
+      ['#clientContact','+1 … or email','+1 … o correo'],
+      ['#from','Exact address…','Dirección exacta…'],
+      ['#to','Address or reference…','Dirección o referencia…'],
+      ['#passenger','First and last name','Nombre y apellido'],
+      ['#notes','Additional instructions…','Indicaciones adicionales…'],
+      ['#clientSendTo','WhatsApp (+1...), SMS (+1...), or email','WhatsApp (+1...), SMS (+1...) o correo']
+    ];
+    const es = getLang()==='es';
+    placeholders.forEach(([sel, en, esTxt])=>{
+      const el=document.querySelector(sel); if(el) el.setAttribute('placeholder', es?esTxt:en);
+    });
+    // role pill
+    const pill=document.getElementById('rolePill');
+    if(pill.dataset.role){
+      const map={dispatcher:'dispatcher', driver:'driver_role', user:'user'};
+      pill.textContent = t(map[pill.dataset.role]||'user');
+    }
+  }
+  const sel=document.getElementById('langSel');
+  sel.value=localStorage.getItem('tf_lang_forced')||'auto';
+  sel.addEventListener('change',()=>{ localStorage.setItem('tf_lang_forced', sel.value); location.reload(); });
 
-  let currentSummary=null;
-  document.getElementById("btnPreview").addEventListener("click",()=>{
-    const msg=`${t("client")}: ${document.getElementById("clientName").value}\n${t("passenger")}: ${document.getElementById("passenger").value}\n${t("pick")}: ${document.getElementById("from").value}\n${t("drop")}: ${document.getElementById("to").value}\n${t("price")}: ${document.getElementById("price").value}`;
-    document.getElementById("preview").textContent=msg; currentSummary=msg;
-  });
+  const $ = (s)=>document.querySelector(s);
 
-  document.getElementById("btnSendDriver").addEventListener("click",async()=>{
-    if(!currentSummary){alert("Generate summary first");return;}
-    const job={
-      createdAt:serverTimestamp(),
-      clientName:document.getElementById("clientName").value,
-      passenger:document.getElementById("passenger").value,
-      from:document.getElementById("from").value,
-      to:document.getElementById("to").value,
-      price:document.getElementById("price").value,
-      driverRef:document.getElementById("driverSel").value
+  // FLEET
+  const DEFAULT_DRIVERS = [
+    {id:'YbrStIOyf7NGabgUvlkbOqiR7cq2', email:'fmluisorlando@gmail.com', name:'Luis Orlando', phone:'+1', vehicle:'Ford Transit', plate:'—', whatsapp:'+1'},
+  ];
+  let fleet = [...DEFAULT_DRIVERS];
+
+  async function loadDrivers(){
+    try{
+      const snap = await getDocs(collection(db, 'drivers'));
+      const list = [];
+      snap.forEach(d=> list.push(d.data()));
+      if(list.length) fleet = list;
+    }catch(e){ /* optional */ }
+  }
+  function paintFleet(){
+    document.getElementById('kpiDrivers').textContent=String(fleet.length);
+    const sel = document.getElementById('driverSel'); sel.innerHTML='';
+    fleet.forEach(d=>{ const opt=document.createElement('option'); opt.value=d.id||d.uid||d.email; opt.textContent=`${d.name||d.email} • ${d.vehicle||''} • ${d.plate||''}`; sel.appendChild(opt); });
+    const list = document.getElementById('fleetList'); list.innerHTML = fleet.map(d=>`<div class="pill" style="margin:4px 6px 6px 0;display:flex;justify-content:space-between;align-items:center;width:100%"><span>🚗 <b>${d.name||d.email}</b> · ${d.vehicle||'—'} · ${d.plate||'—'} · <span class="muted">${d.phone||''}</span></span></div>`).join('');
+    updateDriverInfo();
+  }
+  function findDriver(id){ return fleet.find(d=> (d.id||d.uid||d.email) == id) || fleet[0]; }
+  function updateDriverInfo(){ const d=findDriver(document.getElementById('driverSel').value); if(!d) return; document.getElementById('driverInfo').textContent = `Phone: ${d.phone||'—'} · WhatsApp: ${d.whatsapp||'—'} · Email: ${d.email||'—'}`; }
+  document.getElementById('driverSel')?.addEventListener('change', updateDriverInfo);
+
+  // MAP + SUMMARY
+  function accSummary(){ const items=[]; if(document.getElementById('needWheel').checked) items.push(t('need_wheel')); if(document.getElementById('needBari').checked) items.push(t('need_bari')); if(document.getElementById('needStret').checked) items.push(t('need_stret')); if(document.getElementById('needOxy').checked) items.push(t('need_oxy')); if(document.getElementById('needExtra').checked) items.push(t('need_extra')); return items.length? items.join(', ') : 'N/A'; }
+  function buildMapUrl(pickup, destination){ const enc=encodeURIComponent; const base="https://www.google.com/maps/dir/?api=1"; return `${base}&destination=${enc(destination)}&waypoints=${enc(pickup)}&travelmode=driving&dir_action=navigate`; }
+
+  function collect(){
+    const driver = findDriver(document.getElementById('driverSel').value);
+    const from=document.getElementById('from').value.trim();
+    const to=document.getElementById('to').value.trim();
+    const mapUrl=(from&&to)?buildMapUrl(from,to):'';
+    const pickupAt=document.getElementById('pickupAt').value? new Date(document.getElementById('pickupAt').value).toISOString() : null;
+    return {
+      clientName:document.getElementById('clientName').value.trim(),
+      clientContact:document.getElementById('clientContact').value.trim(),
+      passenger:document.getElementById('passenger').value.trim(),
+      age:Number(document.getElementById('age').value||0),
+      companions:Number(document.getElementById('companions').value||0),
+      from, to, mapUrl, pickupAt,
+      acc: accSummary(),
+      floor:Number(document.getElementById('floor').value||0),
+      noElev:document.getElementById('noElev').value,
+      steps:Number(document.getElementById('steps').value||0),
+      price:Number(document.getElementById('price').value||0),
+      notes:document.getElementById('notes').value.trim(),
+      driver
     };
-    await addDoc(collection(db,"jobs"),job);
-    alert("Sent to driver");
+  }
+
+  function companyFooter(){ return `\n\n— ${COMPANY.name} • ${COMPANY.slogan}\n☎ ${COMPANY.phone} • ${COMPANY.web}`; }
+  function renderPreview(){
+    const o=collect();
+    const when = o.pickupAt ? new Date(o.pickupAt).toLocaleString(getLang()==='es'?'es-ES':'en-US') : '-';
+    const msg = `Client: ${o.clientName} (${o.clientContact})\nPassenger: ${o.passenger} • ${o.age ? t('age')+': '+o.age : ''} • ${t('companions')}: ${o.companions}\n${t('pick')}: ${o.from}\n${t('drop')}: ${o.to}\n${t('pick_time')}: ${when}\n${t('needs')}: ${o.acc}\nBuilding: ${t('floor')} ${o.floor} • ${o.noElev==='yes'?t('no_elev'):'Elevator'} • ${t('steps')}: ${o.steps}\n${t('price')}: ${o.price}\nNotes: ${o.notes||'-'}\nROUTE: ${o.mapUrl}` + companyFooter();
+    document.getElementById('preview').textContent = msg;
+    // Auto-save to local if enabled
+    if(localStorage.getItem('dwcs_auto_save')==='1'){ saveLocalJob({...o, status:'draft'}); }
+    return {msg, data:o};
+  }
+
+  // LOCAL BACKUP (browser storage)
+  function getLocalJobs(){ try{ return JSON.parse(localStorage.getItem('dwcs_jobs')||'[]'); }catch(e){ return []; } }
+  function setLocalJobs(arr){ localStorage.setItem('dwcs_jobs', JSON.stringify(arr)); updateLocalInfo(); }
+  function saveLocalJob(job){ const arr=getLocalJobs(); const id = Date.now()+'_'+Math.random().toString(36).slice(2,8); arr.push({...job, id, savedAt:new Date().toISOString()}); setLocalJobs(arr); }
+  function markLocalSent(mapUrl){ const arr=getLocalJobs(); const idx=arr.findIndex(j=>j.mapUrl===mapUrl); if(idx>=0){ arr[idx].status='sent'; setLocalJobs(arr); } }
+  function updateLocalInfo(){
+    const arr=getLocalJobs();
+    const byDay = arr.filter(j=> j.pickupAt && (new Date(j.pickupAt)).toDateString() === (new Date()).toDateString()).length;
+    document.getElementById('localInfo').textContent = `${arr.length} local items • ${byDay} today`;
+  }
+
+  // EXPORT JSON
+  function exportLocal(){
+    const data = JSON.stringify(getLocalJobs(), null, 2);
+    const blob = new Blob([data], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'dwcs-backup.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  }
+
+  // KPIs (merge Firestore + Local)
+  async function refreshKPIs(){
+    const itemsToday=[], itemsFuture=[];
+    const now=new Date(); const todayStr=now.toDateString();
+
+    // Firestore (try/catch)
+    try{
+      const all = await getDocs(query(collection(db,'jobs')));
+      all.forEach(d=>{
+        const j=d.data();
+        const when = j.pickupAt?.toDate ? j.pickupAt.toDate() : (j.pickupAt ? new Date(j.pickupAt) : null);
+        if(!when) return;
+        const line = `${when.toLocaleString(getLang()==='es'?'es-ES':'en-US')} — ${j.passenger} · ${j.from} → ${j.to} · $${j.price||'-'}`;
+        if(when.toDateString()===todayStr){ itemsToday.push(line); }
+        if(when>now){ itemsFuture.push(line); }
+      });
+    }catch(e){ /* if rules deny, still show local */ }
+
+    // Local
+    getLocalJobs().forEach(j=>{
+      const when = j.pickupAt ? new Date(j.pickupAt) : null;
+      if(!when) return;
+      const line = `${when.toLocaleString(getLang()==='es'?'es-ES':'en-US')} — ${j.passenger} · ${j.from} → ${j.to} · $${j.price||'-'} (local)`;
+      if(when.toDateString()===todayStr){ itemsToday.push(line); }
+      if(when>now){ itemsFuture.push(line); }
+    });
+
+    document.getElementById('kpiToday').textContent=String(itemsToday.length);
+    document.getElementById('kpiPending').textContent=String(itemsFuture.length);
+
+    document.getElementById('kpiTodayCard').onclick=()=>openListDlg(t('jobs_today'), itemsToday);
+    document.getElementById('kpiPendingCard').onclick=()=>openListDlg(t('scheduled'), itemsFuture);
+  }
+
+  function urlify(text){
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.replace(urlRegex, function(url) {
+      return '<a class="link" href="' + url + '" target="_self">' + url + '</a>';
+    });
+  }
+
+  async function loadDriverJobs(user){
+    const now = new Date();
+    const todayStr = now.toDateString();
+    const today=[], upcoming=[], done=[];
+
+    try{
+      const my = await getDocs(query(collection(db,'jobs'), where('driverRef','==', user.uid||user.email)));
+      my.forEach(d=>{
+        const j=d.data();
+        const when=j.pickupAt?.toDate? j.pickupAt.toDate() : (j.pickupAt? new Date(j.pickupAt):null);
+        const baseTxt = `# ${j.passenger} — ${j.from} → ${j.to}\n${t('pick_time')}: ${when?when.toLocaleString(getLang()==='es'?'es-ES':'en-US'): '-' }\n${t('price')}: ${j.price || '-'}\n${t('needs')}: ${j.needs || 'N/A'}\nROUTE: ${j.mapUrl}` + companyFooter();
+        const baseHtml = urlify(baseTxt).replaceAll('\n','<br/>');
+        const card = `<div>${baseHtml}</div>`;
+        if(when && when<now) done.push(card);
+        if(when && when.toDateString()===todayStr) today.push(card);
+        if(when && when>now) upcoming.push(card);
+      });
+    }catch(e){
+      // If Firestore blocked, driver will be empty; keep placeholders
+    }
+
+    document.getElementById('drv_today').innerHTML = today.join('<br/><br/>') || t('empty');
+    document.getElementById('drv_upcoming').innerHTML = upcoming.join('<br/><br/>') || t('empty');
+    document.getElementById('drv_done_count').textContent = String(done.length);
+    document.getElementById('drv_sched_count').textContent = String(upcoming.length);
+  }
+
+  function openListDlg(title, lines){
+    document.getElementById('listDlgTitle').textContent = title;
+    document.getElementById('listDlgBody').textContent = lines.length? lines.join('\n') : t('empty');
+    document.getElementById('listDlg').showModal();
+  }
+
+  const sectionAuth = document.getElementById('sectionAuth');
+  const dispatcherUI = document.getElementById('dispatcherUI');
+  const driverUI = document.getElementById('driverUI');
+  const rolePill = document.getElementById('rolePill');
+  const btnSignIn = document.getElementById('btnSignIn');
+  const btnSignOut = document.getElementById('btnSignOut');
+
+  btnSignIn.addEventListener('click', async ()=>{
+    const email=document.getElementById('email').value.trim();
+    const password=document.getElementById('password').value;
+    try{ await signInWithEmailAndPassword(auth,email,password); }
+    catch(e){ alert(t('login_error') + e.message); }
+  });
+  btnSignOut.addEventListener('click', async ()=>{ await signOut(auth); });
+
+  function showOnly(section){
+    sectionAuth.style.display='none'; dispatcherUI.style.display='none'; driverUI.style.display='none';
+    section.style.display='block';
+  }
+  function landing(){ showOnly(sectionAuth); }
+
+  onAuthStateChanged(auth, async (user)=>{
+    if(!user){
+      rolePill.textContent='—'; rolePill.dataset.role=''; landing(); return;
+    }
+    document.getElementById('btnSignOut').style.display='inline-flex';
+    await loadDrivers();
+    paintFleet();
+    const email = user.email||'';
+    if(DISPATCHERS.includes(email)){
+      rolePill.dataset.role='dispatcher'; rolePill.textContent = t('dispatcher');
+      showOnly(dispatcherUI);
+      await refreshKPIs();
+    } else if (DRIVERS.includes(email)) {
+      rolePill.dataset.role='driver'; rolePill.textContent = t('driver_role');
+      showOnly(driverUI);
+      await loadDriverJobs(user);
+    } else {
+      rolePill.dataset.role='user'; rolePill.textContent = t('user');
+      landing();
+      alert('No role assigned for this account.');
+    }
+    applyI18n();
   });
 
-  onAuthStateChanged(auth,user=>{
-    if(!user){document.getElementById("sectionAuth").style.display="block";return;}
-    if(DISPATCHERS.includes(user.email)){document.getElementById("dispatcherUI").style.display="block";}
-    if(DRIVERS.includes(user.email)){document.getElementById("driverUI").style.display="block";}
+  // Buttons
+  document.getElementById('btnPreview').addEventListener('click', renderPreview);
+  document.getElementById('btnSendDriver').addEventListener('click', async ()=>{
+    const {data} = renderPreview();
+    if(!data.from || !data.to){ alert(t('alert_fill')); return; }
+    if(!data.driver){ alert(t('alert_pick_driver')); return; }
+    try{
+      // Save to Firestore (pickupAt as ISO string for compatibility)
+      const job = {
+        createdAt: serverTimestamp(),
+        pickupAt: data.pickupAt || null,
+        from: data.from, to: data.to, mapUrl: data.mapUrl,
+        passenger: data.passenger, age: data.age, companions: data.companions,
+        needs: data.acc, floor: data.floor, noElev: data.noElev, steps: data.steps,
+        price: data.price, notes: data.notes,
+        clientName: data.clientName, clientContact: data.clientContact,
+        driverRef: data.driver.id||data.driver.uid||data.driver.email,
+        driverEmail: data.driver.email||null,
+        status: 'scheduled'
+      };
+      await addDoc(collection(db,'jobs'), job);
+      markLocalSent(data.mapUrl);
+      await refreshKPIs();
+      alert(t('saved'));
+    }catch(e){
+      // Fallback: local save, show reason
+      saveLocalJob({...data, status:'queued'});
+      console.error(e);
+      alert('Could not save to server. Saved locally instead.');
+    }
   });
-  document.getElementById("btnSignIn").addEventListener("click",async()=>{
-    try{await signInWithEmailAndPassword(auth,document.getElementById("email").value,document.getElementById("password").value);}catch(e){alert(e.message);}
+  document.getElementById('btnMap').addEventListener('click', ()=>{
+    const {data} = renderPreview();
+    if(!data.mapUrl) return alert(t('alert_fill'));
+    document.getElementById('btnMap').href=data.mapUrl;
   });
-  document.getElementById("btnSignOut").addEventListener("click",()=>signOut(auth));
+  document.getElementById('btnPrint').addEventListener('click', ()=>window.print());
+
+  // Client dialog
+  document.getElementById('btnClientData').addEventListener('click', ()=>{ const {msg}=renderPreview(); document.getElementById('clientPreview').textContent=msg; document.getElementById('clientDlg').showModal(); });
+  document.getElementById('sendToWA').addEventListener('click',(e)=>{ e.preventDefault(); const to=document.getElementById('clientSendTo').value.replace(/\D/g,''); const {msg}=renderPreview(); if(!to) return; window.open(`https://wa.me/${to}?text=${encodeURIComponent(msg)}`,'_blank'); });
+  document.getElementById('sendToSMS').addEventListener('click',(e)=>{ e.preventDefault(); const to=document.getElementById('clientSendTo').value.replace(/\D/g,''); const {msg}=renderPreview(); if(!to) return; const body=encodeURIComponent(msg); const url = navigator.userAgent.match(/(iPhone|iPad)/) ? `sms:${to}&body=${body}` : `sms:${to}?body=${body}`; location.href=url; });
+  document.getElementById('sendToEmail').addEventListener('click',(e)=>{ e.preventDefault(); const to=document.getElementById('clientSendTo').value.trim(); const {msg}=renderPreview(); if(!to) return; const subject=encodeURIComponent('Dispatch'); window.open(`mailto:${to}?subject=${subject}&body=${encodeURIComponent(msg)}`,'_blank'); });
+
+  // Backup dialog
+  document.getElementById('btnBackup').addEventListener('click', ()=>{
+    document.getElementById('backupDlg').showModal();
+    document.getElementById('autoSave').checked = localStorage.getItem('dwcs_auto_save')==='1';
+    updateLocalInfo();
+  });
+  document.getElementById('btnSaveNow').addEventListener('click', ()=>{
+    const {data}=renderPreview(); saveLocalJob({...data, status:'draft'}); updateLocalInfo(); alert('Saved locally.');
+  });
+  document.getElementById('autoSave').addEventListener('change', (e)=>{
+    localStorage.setItem('dwcs_auto_save', e.target.checked ? '1' : '0');
+  });
+  document.getElementById('btnExport').addEventListener('click', (e)=>{ e.preventDefault(); exportLocal(); });
+  document.getElementById('btnClearLocal').addEventListener('click', (e)=>{ e.preventDefault(); if(confirm('Clear local data?')){ localStorage.removeItem('dwcs_jobs'); updateLocalInfo(); } });
+
+  // Install PWA
+  document.getElementById('openHowTo').addEventListener('click',(e)=>{ e.preventDefault(); document.getElementById('howTo').showModal(); });
+  const installBtn = document.getElementById('btnInstall'); let deferredPrompt=null;
+  function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; }
+  function refreshInstallVisibility(){ installBtn.style.display = isStandalone() ? 'none' : 'inline-flex'; installBtn.textContent = t('install'); }
+  refreshInstallVisibility();
+  window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt=e; refreshInstallVisibility(); installBtn.onclick=async ()=>{ if(!deferredPrompt) return; installBtn.disabled=true; try{ deferredPrompt.prompt(); const {outcome} = await deferredPrompt.userChoice; if(outcome==='accepted') installBtn.style.display='none'; } finally { installBtn.disabled=false; deferredPrompt=null; } }; });
+  window.addEventListener('appinstalled', ()=>{ installBtn.style.display='none'; deferredPrompt=null; alert(t('installed')); });
+  document.addEventListener('visibilitychange', refreshInstallVisibility);
+
+  // Service worker
+  if('serviceWorker' in navigator){ window.addEventListener('load', ()=>{ navigator.serviceWorker.register('./sw.js?v=dwcs-v4'); }); }
+
+  // Initial i18n
+  applyI18n();
 </script>
 </body>
 </html>
