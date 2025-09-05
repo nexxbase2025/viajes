@@ -268,7 +268,6 @@
 </dialog>
 
 <script type="module">
-  // Firebase v10+ modular
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
   import { getFirestore, collection, addDoc, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
@@ -287,10 +286,10 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
-  try { getAnalytics(app); } catch(e) { /* analytics optional */ }
+  try { getAnalytics(app); } catch(e) {}
 
   const DISPATCHERS = ["donbeltranmusic@gmail.com"];
-  const DRIVERS = ["fmluisorlando@gmail.com"]; // default active driver
+  const DRIVERS = ["fmluisorlando@gmail.com"];
 
   const COMPANY = {
     name: "Danbury Wheel Chair Service",
@@ -299,370 +298,249 @@
     web: "www.danburywheelchairservice.com"
   };
 
-  // i18n dictionary
+  // i18n
   const STR = {
-    en: {
-      install:"Install", signout:"Sign out", welcome:"Welcome", signin:"Sign in to continue",
-      new_dispatch:"New dispatch", client:"Client / Requester", client_phone:"Client phone/email",
-      pick:"Pickup (origin)", pick_time:"Date/Time", drop:"Dropoff (destination)",
-      passenger:"Passenger", age:"Age", companions:"Companions", needs:"Needs / Accessibility",
-      need_wheel:"Wheelchair", need_bari:"Bariatric chair", need_stret:"Stretcher", need_oxy:"Oxygen", need_extra:"Extra staff",
-      floor:"Destination floor", no_elev:"No elevator?", steps:"# steps", price:"Price (USD)", notes:"Notes",
-      driver:"Driver / Vehicle", generate:"Generate summary", send:"Send to driver",
-      open_map:"Open map", client_data:"Client data", print:"Print", preview:"Message preview",
-      drivers:"Drivers", jobs_today:"Jobs today", scheduled:"Scheduled", my_jobs:"My jobs",
-      trips_done:"Trips done", trips_sched:"Scheduled", today:"Today", upcoming:"Upcoming",
-      how_to_install:"How to install", howto_title:"Install on iPhone/iPad",
-      howto_body:"1) Open in Safari · 2) Tap <b>Share</b> · 3) <b>Add to Home Screen</b> · 4) Confirm.",
-      ok:"OK", close:"Close",
-      dispatcher:"Dispatcher", driver_role:"Driver", user:"User",
-      alert_fill:"Complete origin and destination", alert_pick_driver:"Pick a driver",
-      saved:"Saved and sent to driver.", login_error:"Login error: ",
-      installed:"Installed",
-      backup:"Set backup", backup_desc:"Backups are stored on this device. You can export a JSON file anytime.", backup_auto:"Auto‑save summaries",
-      export_json:"Export JSON", clear_local:"Clear local",
-      send_whatsapp:"Send WhatsApp", send_sms:"Send SMS", send_email:"Send Email",
-      empty:"(empty)"
+    en:{install:"Install",signout:"Sign out",welcome:"Welcome",signin:"Sign in to continue",
+        new_dispatch:"New dispatch",client:"Client / Requester",client_phone:"Client phone/email",
+        pick:"Pickup (origin)",pick_time:"Date/Time",drop:"Dropoff (destination)",
+        passenger:"Passenger",age:"Age",companions:"Companions",needs:"Needs / Accessibility",
+        need_wheel:"Wheelchair",need_bari:"Bariatric chair",need_stret:"Stretcher",need_oxy:"Oxygen",need_extra:"Extra staff",
+        floor:"Destination floor",no_elev:"No elevator?",steps:"# steps",price:"Price (USD)",notes:"Notes",
+        driver:"Driver / Vehicle",generate:"Generate summary",send:"Send to driver",
+        open_map:"Open map",client_data:"Client data",print:"Print",preview:"Message preview",
+        drivers:"Drivers",jobs_today:"Jobs today",scheduled:"Scheduled",my_jobs:"My jobs",
+        trips_done:"Trips done",trips_sched:"Scheduled",today:"Today",upcoming:"Upcoming",
+        how_to_install:"How to install",howto_title:"Install on iPhone/iPad",
+        howto_body:"1) Open in Safari · 2) Tap <b>Share</b> · 3) <b>Add to Home Screen</b> · 4) Confirm.",
+        ok:"OK",close:"Close",dispatcher:"Dispatcher",driver_role:"Driver",user:"User",
+        alert_fill:"Complete origin and destination",alert_pick_driver:"Pick a driver",
+        saved:"Saved and sent to driver.",login_error:"Login error: ",installed:"Installed",
+        backup:"Set backup",backup_desc:"Backups are stored on this device. You can export a JSON file anytime.",backup_auto:"Auto‑save summaries",
+        export_json:"Export JSON",clear_local:"Clear local",
+        send_whatsapp:"Send WhatsApp",send_sms:"Send SMS",send_email:"Send Email",empty:"(empty)",
+        saved_local:"Saved locally.", saved_server_fail:"Could not save to server. Saved locally instead."
     },
-    es: {
-      install:"Instalar", signout:"Cerrar sesión", welcome:"Bienvenido", signin:"Inicia sesión para continuar",
-      new_dispatch:"Nuevo despacho", client:"Cliente / Solicitante", client_phone:"Teléfono/correo del cliente",
-      pick:"Recogida (origen)", pick_time:"Fecha/Hora", drop:"Destino (llegada)",
-      passenger:"Pasajero", age:"Edad", companions:"Acompañantes", needs:"Necesidades / Accesibilidad",
-      need_wheel:"Silla de ruedas", need_bari:"Silla bariátrica", need_stret:"Camilla", need_oxy:"Oxígeno", need_extra:"Personal extra",
-      floor:"Piso de destino", no_elev:"¿Sin ascensor?", steps:"# escalones", price:"Precio (USD)", notes:"Notas",
-      driver:"Conductor / Vehículo", generate:"Generar resumen", send:"Enviar al conductor",
-      open_map:"Abrir mapa", client_data:"Datos del cliente", print:"Imprimir", preview:"Vista previa del mensaje",
-      drivers:"Conductores", jobs_today:"Despachos hoy", scheduled:"Programados", my_jobs:"Mis viajes",
-      trips_done:"Viajes realizados", trips_sched:"Programados", today:"Hoy", upcoming:"Próximos",
-      how_to_install:"Cómo instalar", howto_title:"Instalar en iPhone/iPad",
-      howto_body:"1) Abre en Safari · 2) Toca <b>Compartir</b> · 3) <b>Añadir a pantalla de inicio</b> · 4) Confirmar.",
-      ok:"OK", close:"Cerrar",
-      dispatcher:"Despachador", driver_role:"Conductor", user:"Usuario",
-      alert_fill:"Completa origen y destino", alert_pick_driver:"Selecciona un conductor",
-      saved:"Despacho guardado y enviado al conductor.", login_error:"Error de inicio de sesión: ",
-      installed:"Instalada",
-      backup:"Configurar respaldo", backup_desc:"Los respaldos se guardan en este dispositivo. Puedes exportar un archivo JSON cuando quieras.", backup_auto:"Auto‑guardar resúmenes",
-      export_json:"Exportar JSON", clear_local:"Borrar local",
-      send_whatsapp:"Enviar WhatsApp", send_sms:"Enviar SMS", send_email:"Enviar Email",
-      empty:"(vacío)"
+    es:{install:"Instalar",signout:"Cerrar sesión",welcome:"Bienvenido",signin:"Inicia sesión para continuar",
+        new_dispatch:"Nuevo despacho",client:"Cliente / Solicitante",client_phone:"Teléfono/correo del cliente",
+        pick:"Recogida (origen)",pick_time:"Fecha/Hora",drop:"Destino (llegada)",
+        passenger:"Pasajero",age:"Edad",companions:"Acompañantes",needs:"Necesidades / Accesibilidad",
+        need_wheel:"Silla de ruedas",need_bari:"Silla bariátrica",need_stret:"Camilla",need_oxy:"Oxígeno",need_extra:"Personal extra",
+        floor:"Piso de destino",no_elev:"¿Sin ascensor?",steps:"# escalones",price:"Precio (USD)",notes:"Notas",
+        driver:"Conductor / Vehículo",generate:"Generar resumen",send:"Enviar al conductor",
+        open_map:"Abrir mapa",client_data:"Datos del cliente",print:"Imprimir",preview:"Vista previa del mensaje",
+        drivers:"Conductores",jobs_today:"Despachos hoy",scheduled:"Programados",my_jobs:"Mis viajes",
+        trips_done:"Viajes realizados",trips_sched:"Programados",today:"Hoy",upcoming:"Próximos",
+        how_to_install:"Cómo instalar",howto_title:"Instalar en iPhone/iPad",
+        howto_body:"1) Abre en Safari · 2) Toca <b>Compartir</b> · 3) <b>Añadir a pantalla de inicio</b> · 4) Confirmar.",
+        ok:"OK",close:"Cerrar",dispatcher:"Despachador",driver_role:"Conductor",user:"Usuario",
+        alert_fill:"Completa origen y destino",alert_pick_driver:"Selecciona un conductor",
+        saved:"Despacho guardado y enviado al conductor.",login_error:"Error de inicio de sesión: ",installed:"Instalada",
+        backup:"Configurar respaldo",backup_desc:"Los respaldos se guardan en este dispositivo. Puedes exportar un archivo JSON cuando quieras.",backup_auto:"Auto‑guardar resúmenes",
+        export_json:"Exportar JSON",clear_local:"Borrar local",
+        send_whatsapp:"Enviar WhatsApp",send_sms:"Enviar SMS",send_email:"Enviar Email",empty:"(vacío)",
+        saved_local:"Guardado localmente.", saved_server_fail:"No se pudo guardar en el servidor. Guardado localmente."
     }
   };
-  function getLang(){
-    const forced = localStorage.getItem('tf_lang_forced');
-    if(forced && forced!=='auto') return forced;
-    return (navigator.language||'es').toLowerCase().startsWith('es') ? 'es' : 'en';
-  }
-  function t(k){ const lang=getLang(); return STR[lang][k] || STR.en[k] || k; }
+  function getLang(){ const forced=localStorage.getItem('tf_lang_forced'); if(forced && forced!=='auto') return forced; return (navigator.language||'es').toLowerCase().startsWith('es')?'es':'en'; }
+  function t(k){ const lang=getLang(); return STR[lang][k]||STR.en[k]||k; }
   function applyI18n(){
-    document.querySelectorAll('[data-i18n]').forEach(el=>{
-      const key = el.getAttribute('data-i18n');
-      el.innerHTML = t(key);
-    });
-    // placeholders
-    const placeholders = [
-      ['#email','email','correo'],
-      ['#password','password','contraseña'],
-      ['#clientName','Name and phone','Nombre y teléfono'],
-      ['#clientContact','+1 … or email','+1 … o correo'],
-      ['#from','Exact address…','Dirección exacta…'],
-      ['#to','Address or reference…','Dirección o referencia…'],
-      ['#passenger','First and last name','Nombre y apellido'],
-      ['#notes','Additional instructions…','Indicaciones adicionales…'],
-      ['#clientSendTo','WhatsApp (+1...), SMS (+1...), or email','WhatsApp (+1...), SMS (+1...) o correo']
-    ];
-    const es = getLang()==='es';
-    placeholders.forEach(([sel, en, esTxt])=>{
-      const el=document.querySelector(sel); if(el) el.setAttribute('placeholder', es?esTxt:en);
-    });
-    // role pill
-    const pill=document.getElementById('rolePill');
-    if(pill.dataset.role){
-      const map={dispatcher:'dispatcher', driver:'driver_role', user:'user'};
-      pill.textContent = t(map[pill.dataset.role]||'user');
-    }
+    document.querySelectorAll('[data-i18n]').forEach(el=>{ const key=el.getAttribute('data-i18n'); el.innerHTML=t(key); });
+    const placeholders=[['#email','email','correo'],['#password','password','contraseña'],['#clientName','Name and phone','Nombre y teléfono'],['#clientContact','+1 … or email','+1 … o correo'],['#from','Exact address…','Dirección exacta…'],['#to','Address or reference…','Dirección o referencia…'],['#passenger','First and last name','Nombre y apellido'],['#notes','Additional instructions…','Indicaciones adicionales…'],['#clientSendTo','WhatsApp (+1...), SMS (+1...), or email','WhatsApp (+1...), SMS (+1...) o correo']];
+    const es=getLang()==='es'; placeholders.forEach(([sel,en,esTxt])=>{ const el=document.querySelector(sel); if(el) el.setAttribute('placeholder', es?esTxt:en); });
+    const pill=document.getElementById('rolePill'); if(pill.dataset.role){ const map={dispatcher:'dispatcher',driver:'driver_role',user:'user'}; pill.textContent=t(map[pill.dataset.role]||'user'); }
   }
-  const sel=document.getElementById('langSel');
-  sel.value=localStorage.getItem('tf_lang_forced')||'auto';
-  sel.addEventListener('change',()=>{ localStorage.setItem('tf_lang_forced', sel.value); location.reload(); });
+  const sel=document.getElementById('langSel'); sel.value=localStorage.getItem('tf_lang_forced')||'auto'; sel.addEventListener('change',()=>{ localStorage.setItem('tf_lang_forced', sel.value); location.reload(); });
+  const $=(s)=>document.querySelector(s);
 
-  const $ = (s)=>document.querySelector(s);
-
-  // FLEET
-  const DEFAULT_DRIVERS = [
-    {id:'YbrStIOyf7NGabgUvlkbOqiR7cq2', email:'fmluisorlando@gmail.com', name:'Luis Orlando', phone:'+1', vehicle:'Ford Transit', plate:'—', whatsapp:'+1'},
-  ];
-  let fleet = [...DEFAULT_DRIVERS];
-
-  async function loadDrivers(){
-    try{
-      const snap = await getDocs(collection(db, 'drivers'));
-      const list = [];
-      snap.forEach(d=> list.push(d.data()));
-      if(list.length) fleet = list;
-    }catch(e){ /* optional */ }
-  }
+  // Fleet
+  const DEFAULT_DRIVERS=[{id:'YbrStIOyf7NGabgUvlkbOqiR7cq2',email:'fmluisorlando@gmail.com',name:'Luis Orlando',phone:'+1',vehicle:'Ford Transit',plate:'—',whatsapp:'+1'}];
+  let fleet=[...DEFAULT_DRIVERS];
+  async function loadDrivers(){ try{ const snap=await getDocs(collection(db,'drivers')); const list=[]; snap.forEach(d=>list.push(d.data())); if(list.length) fleet=list; }catch(e){} }
   function paintFleet(){
-    document.getElementById('kpiDrivers').textContent=String(fleet.length);
-    const sel = document.getElementById('driverSel'); sel.innerHTML='';
-    fleet.forEach(d=>{ const opt=document.createElement('option'); opt.value=d.id||d.uid||d.email; opt.textContent=`${d.name||d.email} • ${d.vehicle||''} • ${d.plate||''}`; sel.appendChild(opt); });
-    const list = document.getElementById('fleetList'); list.innerHTML = fleet.map(d=>`<div class="pill" style="margin:4px 6px 6px 0;display:flex;justify-content:space-between;align-items:center;width:100%"><span>🚗 <b>${d.name||d.email}</b> · ${d.vehicle||'—'} · ${d.plate||'—'} · <span class="muted">${d.phone||''}</span></span></div>`).join('');
+    $('#kpiDrivers').textContent=String(fleet.length);
+    const sel=$('#driverSel'); sel.innerHTML=''; fleet.forEach(d=>{ const opt=document.createElement('option'); opt.value=d.id||d.uid||d.email; opt.textContent=`${d.name||d.email} • ${d.vehicle||''} • ${d.plate||''}`; sel.appendChild(opt); });
+    const list=$('#fleetList'); list.innerHTML=fleet.map(d=>`<div class="pill" style="margin:4px 6px 6px 0;display:flex;justify-content:space-between;align-items:center;width:100%"><span>🚗 <b>${d.name||d.email}</b> · ${d.vehicle||'—'} · ${d.plate||'—'} · <span class="muted">${d.phone||''}</span></span></div>`).join('');
     updateDriverInfo();
   }
-  function findDriver(id){ return fleet.find(d=> (d.id||d.uid||d.email) == id) || fleet[0]; }
-  function updateDriverInfo(){ const d=findDriver(document.getElementById('driverSel').value); if(!d) return; document.getElementById('driverInfo').textContent = `Phone: ${d.phone||'—'} · WhatsApp: ${d.whatsapp||'—'} · Email: ${d.email||'—'}`; }
-  document.getElementById('driverSel')?.addEventListener('change', updateDriverInfo);
+  function findDriver(id){ return fleet.find(d=>(d.id||d.uid||d.email)==id) || fleet[0]; }
+  function updateDriverInfo(){ const d=findDriver($('#driverSel').value); if(!d) return; $('#driverInfo').textContent = `Phone: ${d.phone||'—'} · WhatsApp: ${d.whatsapp||'—'} · Email: ${d.email||'—'}`; }
+  $('#driverSel')?.addEventListener('change', updateDriverInfo);
 
-  // MAP + SUMMARY
-  function accSummary(){ const items=[]; if(document.getElementById('needWheel').checked) items.push(t('need_wheel')); if(document.getElementById('needBari').checked) items.push(t('need_bari')); if(document.getElementById('needStret').checked) items.push(t('need_stret')); if(document.getElementById('needOxy').checked) items.push(t('need_oxy')); if(document.getElementById('needExtra').checked) items.push(t('need_extra')); return items.length? items.join(', ') : 'N/A'; }
-  function buildMapUrl(pickup, destination){ const enc=encodeURIComponent; const base="https://www.google.com/maps/dir/?api=1"; return `${base}&destination=${enc(destination)}&waypoints=${enc(pickup)}&travelmode=driving&dir_action=navigate`; }
+  // Helpers
+  function accSummary(){ const items=[]; if($('#needWheel').checked) items.push(t('need_wheel')); if($('#needBari').checked) items.push(t('need_bari')); if($('#needStret').checked) items.push(t('need_stret')); if($('#needOxy').checked) items.push(t('need_oxy')); if($('#needExtra').checked) items.push(t('need_extra')); return items.length?items.join(', '):'N/A'; }
+  function buildMapUrl(pickup,destination){ const enc=encodeURIComponent; const base="https://www.google.com/maps/dir/?api=1"; return `${base}&destination=${enc(destination)}&waypoints=${enc(pickup)}&travelmode=driving&dir_action=navigate`; }
+  function companyFooter(){ return `\n\n— ${COMPANY.name} • ${COMPANY.slogan}\n☎ ${COMPANY.phone} • ${COMPANY.web}`; }
 
   function collect(){
-    const driver = findDriver(document.getElementById('driverSel').value);
-    const from=document.getElementById('from').value.trim();
-    const to=document.getElementById('to').value.trim();
+    const driver=findDriver($('#driverSel').value);
+    const from=$('#from').value.trim(); const to=$('#to').value.trim();
     const mapUrl=(from&&to)?buildMapUrl(from,to):'';
-    const pickupAt=document.getElementById('pickupAt').value? new Date(document.getElementById('pickupAt').value).toISOString() : null;
-    return {
-      clientName:document.getElementById('clientName').value.trim(),
-      clientContact:document.getElementById('clientContact').value.trim(),
-      passenger:document.getElementById('passenger').value.trim(),
-      age:Number(document.getElementById('age').value||0),
-      companions:Number(document.getElementById('companions').value||0),
-      from, to, mapUrl, pickupAt,
-      acc: accSummary(),
-      floor:Number(document.getElementById('floor').value||0),
-      noElev:document.getElementById('noElev').value,
-      steps:Number(document.getElementById('steps').value||0),
-      price:Number(document.getElementById('price').value||0),
-      notes:document.getElementById('notes').value.trim(),
-      driver
-    };
+    const pickupAt=$('#pickupAt').value? new Date($('#pickupAt').value).toISOString():null;
+    return {clientName:$('#clientName').value.trim(), clientContact:$('#clientContact').value.trim(),
+      passenger:$('#passenger').value.trim(), age:Number($('#age').value||0), companions:Number($('#companions').value||0),
+      from,to,mapUrl,pickupAt, acc:accSummary(), floor:Number($('#floor').value||0), noElev:$('#noElev').value, steps:Number($('#steps').value||0),
+      price:Number($('#price').value||0), notes:$('#notes').value.trim(), driver };
   }
 
-  function companyFooter(){ return `\n\n— ${COMPANY.name} • ${COMPANY.slogan}\n☎ ${COMPANY.phone} • ${COMPANY.web}`; }
   function renderPreview(){
     const o=collect();
-    const when = o.pickupAt ? new Date(o.pickupAt).toLocaleString(getLang()==='es'?'es-ES':'en-US') : '-';
-    const msg = `Client: ${o.clientName} (${o.clientContact})\nPassenger: ${o.passenger} • ${o.age ? t('age')+': '+o.age : ''} • ${t('companions')}: ${o.companions}\n${t('pick')}: ${o.from}\n${t('drop')}: ${o.to}\n${t('pick_time')}: ${when}\n${t('needs')}: ${o.acc}\nBuilding: ${t('floor')} ${o.floor} • ${o.noElev==='yes'?t('no_elev'):'Elevator'} • ${t('steps')}: ${o.steps}\n${t('price')}: ${o.price}\nNotes: ${o.notes||'-'}\nROUTE: ${o.mapUrl}` + companyFooter();
-    document.getElementById('preview').textContent = msg;
-    // Auto-save to local if enabled
-    if(localStorage.getItem('dwcs_auto_save')==='1'){ saveLocalJob({...o, status:'draft'}); }
-    return {msg, data:o};
+    const when=o.pickupAt ? new Date(o.pickupAt).toLocaleString(getLang()==='es'?'es-ES':'en-US'):'-';
+    const msg=`Client: ${o.clientName} (${o.clientContact})\nPassenger: ${o.passenger} • ${o.age? t('age')+': '+o.age:''} • ${t('companions')}: ${o.companions}\n${t('pick')}: ${o.from}\n${t('drop')}: ${o.to}\n${t('pick_time')}: ${when}\n${t('needs')}: ${o.acc}\nBuilding: ${t('floor')} ${o.floor} • ${o.noElev==='yes'?t('no_elev'):'Elevator'} • ${t('steps')}: ${o.steps}\n${t('price')}: ${o.price}\nNotes: ${o.notes||'-'}\nROUTE: ${o.mapUrl}` + companyFooter();
+    $('#preview').textContent=msg;
+    return {msg,data:o};
   }
 
-  // LOCAL BACKUP (browser storage)
+  // Local storage
   function getLocalJobs(){ try{ return JSON.parse(localStorage.getItem('dwcs_jobs')||'[]'); }catch(e){ return []; } }
-  function setLocalJobs(arr){ localStorage.setItem('dwcs_jobs', JSON.stringify(arr)); updateLocalInfo(); }
-  function saveLocalJob(job){ const arr=getLocalJobs(); const id = Date.now()+'_'+Math.random().toString(36).slice(2,8); arr.push({...job, id, savedAt:new Date().toISOString()}); setLocalJobs(arr); }
-  function markLocalSent(mapUrl){ const arr=getLocalJobs(); const idx=arr.findIndex(j=>j.mapUrl===mapUrl); if(idx>=0){ arr[idx].status='sent'; setLocalJobs(arr); } }
-  function updateLocalInfo(){
-    const arr=getLocalJobs();
-    const byDay = arr.filter(j=> j.pickupAt && (new Date(j.pickupAt)).toDateString() === (new Date()).toDateString()).length;
-    document.getElementById('localInfo').textContent = `${arr.length} local items • ${byDay} today`;
-  }
+  function setLocalJobs(a){ localStorage.setItem('dwcs_jobs', JSON.stringify(a)); }
+  function saveLocalJob(job){ const a=getLocalJobs(); const id=Date.now()+'_'+Math.random().toString(36).slice(2,8); a.push({...job,id,status:job.status||'draft', savedAt:new Date().toISOString()}); setLocalJobs(a); return id; }
+  function updateLocalJob(id,patch){ const a=getLocalJobs(); const i=a.findIndex(x=>x.id===id); if(i>=0){ a[i]={...a[i],...patch}; setLocalJobs(a); } }
+  function getLocalDriverInbox(driverKey){ try{ return JSON.parse(localStorage.getItem('dwcs_inbox_'+driverKey)||'[]'); }catch(e){ return []; } }
+  function addToLocalDriverInbox(driverKey, job){ const a=getLocalDriverInbox(driverKey); a.push(job); localStorage.setItem('dwcs_inbox_'+driverKey, JSON.stringify(a)); }
 
-  // EXPORT JSON
-  function exportLocal(){
-    const data = JSON.stringify(getLocalJobs(), null, 2);
-    const blob = new Blob([data], {type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'dwcs-backup.json';
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url), 1000);
-  }
+  function refreshLocalInfo(){ const arr=getLocalJobs(); const todayStr=(new Date()).toDateString(); let today=0; let future=0; arr.forEach(j=>{ const when=j.pickupAt? new Date(j.pickupAt):null; if(!when) return; if(when.toDateString()===todayStr) today++; if(when>new Date()) future++; }); $('#localInfo').textContent = `${arr.length} local items • ${today} today`; }
 
-  // KPIs (merge Firestore + Local)
+  // KPIs from server + local
   async function refreshKPIs(){
-    const itemsToday=[], itemsFuture=[];
-    const now=new Date(); const todayStr=now.toDateString();
+    const itemsToday=[], itemsFuture=[]; const now=new Date(); const todayStr=now.toDateString();
 
-    // Firestore (try/catch)
+    // Firestore
     try{
-      const all = await getDocs(query(collection(db,'jobs')));
-      all.forEach(d=>{
-        const j=d.data();
-        const when = j.pickupAt?.toDate ? j.pickupAt.toDate() : (j.pickupAt ? new Date(j.pickupAt) : null);
-        if(!when) return;
-        const line = `${when.toLocaleString(getLang()==='es'?'es-ES':'en-US')} — ${j.passenger} · ${j.from} → ${j.to} · $${j.price||'-'}`;
-        if(when.toDateString()===todayStr){ itemsToday.push(line); }
-        if(when>now){ itemsFuture.push(line); }
+      const all=await getDocs(query(collection(db,'jobs')));
+      all.forEach(d=>{ const j=d.data(); const when=j.pickupAt?.toDate? j.pickupAt.toDate() : (j.pickupAt? new Date(j.pickupAt):null); if(!when) return;
+        const line=`${when.toLocaleString(getLang()==='es'?'es-ES':'en-US')} — ${j.passenger} · ${j.from} → ${j.to} · $${j.price||'-'}`;
+        if(when.toDateString()===todayStr) itemsToday.push(line);
+        if(when>now) itemsFuture.push(line);
       });
-    }catch(e){ /* if rules deny, still show local */ }
+    }catch(e){ /* ignore */ }
 
     // Local
-    getLocalJobs().forEach(j=>{
-      const when = j.pickupAt ? new Date(j.pickupAt) : null;
-      if(!when) return;
-      const line = `${when.toLocaleString(getLang()==='es'?'es-ES':'en-US')} — ${j.passenger} · ${j.from} → ${j.to} · $${j.price||'-'} (local)`;
-      if(when.toDateString()===todayStr){ itemsToday.push(line); }
-      if(when>now){ itemsFuture.push(line); }
+    getLocalJobs().forEach(j=>{ const when=j.pickupAt? new Date(j.pickupAt):null; if(!when) return;
+      const line=`${when.toLocaleString(getLang()==='es'?'es-ES':'en-US')} — ${j.passenger} · ${j.from} → ${j.to} · $${j.price||'-'} (local)`;
+      if(when.toDateString()===todayStr) itemsToday.push(line);
+      if(when>now) itemsFuture.push(line);
     });
 
-    document.getElementById('kpiToday').textContent=String(itemsToday.length);
-    document.getElementById('kpiPending').textContent=String(itemsFuture.length);
-
-    document.getElementById('kpiTodayCard').onclick=()=>openListDlg(t('jobs_today'), itemsToday);
-    document.getElementById('kpiPendingCard').onclick=()=>openListDlg(t('scheduled'), itemsFuture);
+    $('#kpiToday').textContent=String(itemsToday.length);
+    $('#kpiPending').textContent=String(itemsFuture.length);
+    $('#kpiTodayCard').onclick=()=>openListDlg(t('jobs_today'), itemsToday);
+    $('#kpiPendingCard').onclick=()=>openListDlg(t('scheduled'), itemsFuture);
   }
 
-  function urlify(text){
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    return text.replace(urlRegex, function(url) {
-      return '<a class="link" href="' + url + '" target="_self">' + url + '</a>';
-    });
-  }
+  function openListDlg(title, lines){ $('#listDlgTitle').textContent=title; $('#listDlgBody').textContent=lines.length?lines.join('\n'):t('empty'); $('#listDlg').showModal(); }
+  function urlify(text){ const urlRegex=/(https?:\/\/[^\s]+)/g; return text.replace(urlRegex, (url)=>'<a class="link" href="'+url+'" target="_self">'+url+'</a>'); }
 
+  // Driver view merge (server + local mirror)
   async function loadDriverJobs(user){
-    const now = new Date();
-    const todayStr = now.toDateString();
-    const today=[], upcoming=[], done=[];
+    const now=new Date(); const todayStr=now.toDateString(); const today=[], upcoming=[], done=[];
 
+    const driverKey = user.uid || user.email;
+    // Firestore
     try{
-      const my = await getDocs(query(collection(db,'jobs'), where('driverRef','==', user.uid||user.email)));
-      my.forEach(d=>{
-        const j=d.data();
-        const when=j.pickupAt?.toDate? j.pickupAt.toDate() : (j.pickupAt? new Date(j.pickupAt):null);
-        const baseTxt = `# ${j.passenger} — ${j.from} → ${j.to}\n${t('pick_time')}: ${when?when.toLocaleString(getLang()==='es'?'es-ES':'en-US'): '-' }\n${t('price')}: ${j.price || '-'}\n${t('needs')}: ${j.needs || 'N/A'}\nROUTE: ${j.mapUrl}` + companyFooter();
-        const baseHtml = urlify(baseTxt).replaceAll('\n','<br/>');
-        const card = `<div>${baseHtml}</div>`;
+      const my=await getDocs(query(collection(db,'jobs'), where('driverRef','==', driverKey)));
+      my.forEach(d=>{ const j=d.data(); const when=j.pickupAt?.toDate? j.pickupAt.toDate() : (j.pickupAt? new Date(j.pickupAt):null);
+        const baseTxt = `# ${j.passenger} — ${j.from} → ${j.to}\n${t('pick_time')}: ${when?when.toLocaleString(getLang()==='es'?'es-ES':'en-US'):'-'}\n${t('price')}: ${j.price||'-'}\n${t('needs')}: ${j.needs||'N/A'}\nROUTE: ${j.mapUrl}` + companyFooter();
+        const baseHtml=urlify(baseTxt).replaceAll('\n','<br/>');
+        const card=`<div>${baseHtml}</div>`;
         if(when && when<now) done.push(card);
         if(when && when.toDateString()===todayStr) today.push(card);
         if(when && when>now) upcoming.push(card);
       });
-    }catch(e){
-      // If Firestore blocked, driver will be empty; keep placeholders
-    }
+    }catch(e){}
 
-    document.getElementById('drv_today').innerHTML = today.join('<br/><br/>') || t('empty');
-    document.getElementById('drv_upcoming').innerHTML = upcoming.join('<br/><br/>') || t('empty');
-    document.getElementById('drv_done_count').textContent = String(done.length);
-    document.getElementById('drv_sched_count').textContent = String(upcoming.length);
+    // Local mirror inbox (same device testing)
+    getLocalDriverInbox(driverKey).forEach(j=>{
+      const when=j.pickupAt? new Date(j.pickupAt):null;
+      const baseTxt = `# ${j.passenger} — ${j.from} → ${j.to}\n${t('pick_time')}: ${when?when.toLocaleString(getLang()==='es'?'es-ES':'en-US'):'-'}\n${t('price')}: ${j.price||'-'}\n${t('needs')}: ${j.acc||'N/A'}\nROUTE: ${j.mapUrl}` + companyFooter();
+      const baseHtml=urlify(baseTxt).replaceAll('\n','<br/>');
+      const card=`<div>${baseHtml}</div>`;
+      if(when && when<now) done.push(card);
+      if(when && when.toDateString()===todayStr) today.push(card);
+      if(when && when>now) upcoming.push(card);
+    });
+
+    $('#drv_today').innerHTML=today.join('<br/><br/>')||t('empty');
+    $('#drv_upcoming').innerHTML=upcoming.join('<br/><br/>')||t('empty');
+    $('#drv_done_count').textContent=String(done.length);
+    $('#drv_sched_count').textContent=String(upcoming.length);
   }
 
-  function openListDlg(title, lines){
-    document.getElementById('listDlgTitle').textContent = title;
-    document.getElementById('listDlgBody').textContent = lines.length? lines.join('\n') : t('empty');
-    document.getElementById('listDlg').showModal();
-  }
-
-  const sectionAuth = document.getElementById('sectionAuth');
-  const dispatcherUI = document.getElementById('dispatcherUI');
-  const driverUI = document.getElementById('driverUI');
-  const rolePill = document.getElementById('rolePill');
-  const btnSignIn = document.getElementById('btnSignIn');
-  const btnSignOut = document.getElementById('btnSignOut');
-
-  btnSignIn.addEventListener('click', async ()=>{
-    const email=document.getElementById('email').value.trim();
-    const password=document.getElementById('password').value;
-    try{ await signInWithEmailAndPassword(auth,email,password); }
-    catch(e){ alert(t('login_error') + e.message); }
-  });
+  // Auth / routing
+  const sectionAuth=$('#sectionAuth'); const dispatcherUI=$('#dispatcherUI'); const driverUI=$('#driverUI'); const rolePill=$('#rolePill');
+  const btnSignIn=$('#btnSignIn'); const btnSignOut=$('#btnSignOut');
+  btnSignIn.addEventListener('click', async ()=>{ const email=$('#email').value.trim(); const password=$('#password').value; try{ await signInWithEmailAndPassword(auth,email,password); }catch(e){ alert(t('login_error')+e.message); } });
   btnSignOut.addEventListener('click', async ()=>{ await signOut(auth); });
-
-  function showOnly(section){
-    sectionAuth.style.display='none'; dispatcherUI.style.display='none'; driverUI.style.display='none';
-    section.style.display='block';
-  }
+  function showOnly(s){ sectionAuth.style.display='none'; dispatcherUI.style.display='none'; driverUI.style.display='none'; s.style.display='block'; }
   function landing(){ showOnly(sectionAuth); }
 
   onAuthStateChanged(auth, async (user)=>{
-    if(!user){
-      rolePill.textContent='—'; rolePill.dataset.role=''; landing(); return;
-    }
-    document.getElementById('btnSignOut').style.display='inline-flex';
-    await loadDrivers();
-    paintFleet();
-    const email = user.email||'';
-    if(DISPATCHERS.includes(email)){
-      rolePill.dataset.role='dispatcher'; rolePill.textContent = t('dispatcher');
-      showOnly(dispatcherUI);
-      await refreshKPIs();
-    } else if (DRIVERS.includes(email)) {
-      rolePill.dataset.role='driver'; rolePill.textContent = t('driver_role');
-      showOnly(driverUI);
-      await loadDriverJobs(user);
-    } else {
-      rolePill.dataset.role='user'; rolePill.textContent = t('user');
-      landing();
-      alert('No role assigned for this account.');
-    }
+    if(!user){ rolePill.textContent='—'; rolePill.dataset.role=''; landing(); return; }
+    $('#btnSignOut').style.display='inline-flex';
+    await loadDrivers(); paintFleet();
+    const email=user.email||'';
+    if(DISPATCHERS.includes(email)){ rolePill.dataset.role='dispatcher'; rolePill.textContent=t('dispatcher'); showOnly(dispatcherUI); await refreshKPIs(); }
+    else if(DRIVERS.includes(email)){ rolePill.dataset.role='driver'; rolePill.textContent=t('driver_role'); showOnly(driverUI); await loadDriverJobs(user); }
+    else { rolePill.dataset.role='user'; rolePill.textContent=t('user'); landing(); alert('No role assigned for this account.'); }
     applyI18n();
   });
 
   // Buttons
-  document.getElementById('btnPreview').addEventListener('click', renderPreview);
-  document.getElementById('btnSendDriver').addEventListener('click', async ()=>{
-    const {data} = renderPreview();
+  $('#btnPreview').addEventListener('click', ()=>{
+    const {data}=renderPreview();
+    if(!data.from || !data.to){ alert(t('alert_fill')); return; }
+    const id=saveLocalJob({...data,status:'draft'});
+    refreshLocalInfo(); refreshKPIs();
+    alert(t('saved_local'));
+  });
+
+  $('#btnSendDriver').addEventListener('click', async ()=>{
+    const {data}=renderPreview();
     if(!data.from || !data.to){ alert(t('alert_fill')); return; }
     if(!data.driver){ alert(t('alert_pick_driver')); return; }
+    // Try server
+    let serverOk=false;
     try{
-      // Save to Firestore (pickupAt as ISO string for compatibility)
-      const job = {
-        createdAt: serverTimestamp(),
-        pickupAt: data.pickupAt || null,
-        from: data.from, to: data.to, mapUrl: data.mapUrl,
-        passenger: data.passenger, age: data.age, companions: data.companions,
-        needs: data.acc, floor: data.floor, noElev: data.noElev, steps: data.steps,
-        price: data.price, notes: data.notes,
-        clientName: data.clientName, clientContact: data.clientContact,
-        driverRef: data.driver.id||data.driver.uid||data.driver.email,
-        driverEmail: data.driver.email||null,
-        status: 'scheduled'
-      };
+      const job={createdAt:serverTimestamp(), pickupAt:data.pickupAt||null, from:data.from,to:data.to,mapUrl:data.mapUrl,
+        passenger:data.passenger,age:data.age,companions:data.companions, needs:data.acc, floor:data.floor,noElev:data.noElev,steps:data.steps,
+        price:data.price,notes:data.notes, clientName:data.clientName,clientContact:data.clientContact,
+        driverRef:data.driver.id||data.driver.uid||data.driver.email, driverEmail:data.driver.email||null, status:'scheduled'};
       await addDoc(collection(db,'jobs'), job);
-      markLocalSent(data.mapUrl);
-      await refreshKPIs();
-      alert(t('saved'));
-    }catch(e){
-      // Fallback: local save, show reason
-      saveLocalJob({...data, status:'queued'});
-      console.error(e);
-      alert('Could not save to server. Saved locally instead.');
-    }
+      serverOk=true;
+    }catch(e){ /* swallow */ }
+    // Always store/mark locally
+    const id=saveLocalJob({...data,status:'sent'});
+    // Mirror into local inbox for driver (same device testing)
+    const driverKey=data.driver.id||data.driver.uid||data.driver.email;
+    addToLocalDriverInbox(driverKey, {...data,status:'sent'});
+    refreshLocalInfo(); refreshKPIs();
+    alert(serverOk? t('saved') : t('saved_server_fail'));
   });
-  document.getElementById('btnMap').addEventListener('click', ()=>{
-    const {data} = renderPreview();
-    if(!data.mapUrl) return alert(t('alert_fill'));
-    document.getElementById('btnMap').href=data.mapUrl;
-  });
-  document.getElementById('btnPrint').addEventListener('click', ()=>window.print());
+
+  $('#btnMap').addEventListener('click', ()=>{ const {data}=renderPreview(); if(!data.mapUrl) return alert(t('alert_fill')); $('#btnMap').href=data.mapUrl; });
+  $('#btnPrint').addEventListener('click', ()=>window.print());
 
   // Client dialog
-  document.getElementById('btnClientData').addEventListener('click', ()=>{ const {msg}=renderPreview(); document.getElementById('clientPreview').textContent=msg; document.getElementById('clientDlg').showModal(); });
-  document.getElementById('sendToWA').addEventListener('click',(e)=>{ e.preventDefault(); const to=document.getElementById('clientSendTo').value.replace(/\D/g,''); const {msg}=renderPreview(); if(!to) return; window.open(`https://wa.me/${to}?text=${encodeURIComponent(msg)}`,'_blank'); });
-  document.getElementById('sendToSMS').addEventListener('click',(e)=>{ e.preventDefault(); const to=document.getElementById('clientSendTo').value.replace(/\D/g,''); const {msg}=renderPreview(); if(!to) return; const body=encodeURIComponent(msg); const url = navigator.userAgent.match(/(iPhone|iPad)/) ? `sms:${to}&body=${body}` : `sms:${to}?body=${body}`; location.href=url; });
-  document.getElementById('sendToEmail').addEventListener('click',(e)=>{ e.preventDefault(); const to=document.getElementById('clientSendTo').value.trim(); const {msg}=renderPreview(); if(!to) return; const subject=encodeURIComponent('Dispatch'); window.open(`mailto:${to}?subject=${subject}&body=${encodeURIComponent(msg)}`,'_blank'); });
+  $('#btnClientData').addEventListener('click', ()=>{ const {msg}=renderPreview(); $('#clientPreview').textContent=msg; $('#clientDlg').showModal(); });
+  $('#sendToWA').addEventListener('click',(e)=>{ e.preventDefault(); const to=$('#clientSendTo').value.replace(/\D/g,''); const {msg}=renderPreview(); if(!to) return; window.open(`https://wa.me/${to}?text=${encodeURIComponent(msg)}`,'_blank'); });
+  $('#sendToSMS').addEventListener('click',(e)=>{ e.preventDefault(); const to=$('#clientSendTo').value.replace(/\D/g,''); const {msg}=renderPreview(); if(!to) return; const body=encodeURIComponent(msg); const url = navigator.userAgent.match(/(iPhone|iPad)/) ? `sms:${to}&body=${body}` : `sms:${to}?body=${body}`; location.href=url; });
+  $('#sendToEmail').addEventListener('click',(e)=>{ e.preventDefault(); const to=$('#clientSendTo').value.trim(); const {msg}=renderPreview(); if(!to) return; const subject=encodeURIComponent('Dispatch'); window.open(`mailto:${to}?subject=${subject}&body=${encodeURIComponent(msg)}`,'_blank'); });
 
   // Backup dialog
-  document.getElementById('btnBackup').addEventListener('click', ()=>{
-    document.getElementById('backupDlg').showModal();
-    document.getElementById('autoSave').checked = localStorage.getItem('dwcs_auto_save')==='1';
-    updateLocalInfo();
-  });
-  document.getElementById('btnSaveNow').addEventListener('click', ()=>{
-    const {data}=renderPreview(); saveLocalJob({...data, status:'draft'}); updateLocalInfo(); alert('Saved locally.');
-  });
-  document.getElementById('autoSave').addEventListener('change', (e)=>{
-    localStorage.setItem('dwcs_auto_save', e.target.checked ? '1' : '0');
-  });
-  document.getElementById('btnExport').addEventListener('click', (e)=>{ e.preventDefault(); exportLocal(); });
-  document.getElementById('btnClearLocal').addEventListener('click', (e)=>{ e.preventDefault(); if(confirm('Clear local data?')){ localStorage.removeItem('dwcs_jobs'); updateLocalInfo(); } });
+  $('#btnBackup').addEventListener('click', ()=>{ $('#backupDlg').showModal(); $('#autoSave').checked = localStorage.getItem('dwcs_auto_save')==='1'; refreshLocalInfo(); });
+  $('#btnSaveNow').addEventListener('click', ()=>{ const {data}=renderPreview(); saveLocalJob({...data,status:'draft'}); refreshLocalInfo(); refreshKPIs(); alert(t('saved_local')); });
+  $('#autoSave').addEventListener('change', (e)=>{ localStorage.setItem('dwcs_auto_save', e.target.checked ? '1':'0'); });
+  $('#btnExport').addEventListener('click', (e)=>{ e.preventDefault(); const data = JSON.stringify(getLocalJobs(), null, 2); const blob=new Blob([data],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='dwcs-backup.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 1000); });
+  $('#btnClearLocal').addEventListener('click', (e)=>{ e.preventDefault(); if(confirm('Clear local data?')){ localStorage.removeItem('dwcs_jobs'); refreshLocalInfo(); refreshKPIs(); } });
 
-  // Install PWA
-  document.getElementById('openHowTo').addEventListener('click',(e)=>{ e.preventDefault(); document.getElementById('howTo').showModal(); });
-  const installBtn = document.getElementById('btnInstall'); let deferredPrompt=null;
-  function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; }
-  function refreshInstallVisibility(){ installBtn.style.display = isStandalone() ? 'none' : 'inline-flex'; installBtn.textContent = t('install'); }
+  // PWA install + SW
+  const installBtn=$('#btnInstall'); let deferredPrompt=null;
+  function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true; }
+  function refreshInstallVisibility(){ installBtn.style.display = isStandalone() ? 'none' : 'inline-flex'; installBtn.textContent=t('install'); }
   refreshInstallVisibility();
-  window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt=e; refreshInstallVisibility(); installBtn.onclick=async ()=>{ if(!deferredPrompt) return; installBtn.disabled=true; try{ deferredPrompt.prompt(); const {outcome} = await deferredPrompt.userChoice; if(outcome==='accepted') installBtn.style.display='none'; } finally { installBtn.disabled=false; deferredPrompt=null; } }; });
+  window.addEventListener('beforeinstallprompt',(e)=>{ e.preventDefault(); deferredPrompt=e; refreshInstallVisibility(); installBtn.onclick=async ()=>{ if(!deferredPrompt) return; installBtn.disabled=true; try{ deferredPrompt.prompt(); const {outcome}=await deferredPrompt.userChoice; if(outcome==='accepted') installBtn.style.display='none'; } finally { installBtn.disabled=false; deferredPrompt=null; } }; });
   window.addEventListener('appinstalled', ()=>{ installBtn.style.display='none'; deferredPrompt=null; alert(t('installed')); });
   document.addEventListener('visibilitychange', refreshInstallVisibility);
-
-  // Service worker
-  if('serviceWorker' in navigator){ window.addEventListener('load', ()=>{ navigator.serviceWorker.register('./sw.js?v=dwcs-v4'); }); }
+  if('serviceWorker' in navigator){ window.addEventListener('load', ()=>{ navigator.serviceWorker.register('./sw.js?v=dwcs-v5'); }); }
 
   // Initial i18n
   applyI18n();
