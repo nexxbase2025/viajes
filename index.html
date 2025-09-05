@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0b1220" />
+  <title>Danbury Wheel Chair Service — Dispatch</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <style>
+    :root{ --brand:#0ea5ff; --ink:#eaf2ff; --bg:#0b1220; --card:#10192e; --muted:#9db3cf; --ok:#22c55e; --warn:#fbbf24; --no:#ef4444; }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth; max-width:100%; overflow-x:hidden;}
+    body{margin:0;background:linear-gradient(180deg,#0b1220,#08101f);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;max-width:100%;overflow-x:hidden;}
+    header{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid #1e2a44;background:#0b1220;position:sticky;top:0;z-index:10}
+    .logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.6px}
+    .logo img{width:34px;height:34px;border-radius:7px}
+    .wrap{max-width:1200px;margin:0 auto;padding:18px}
+    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+    @media(max-width:980px){.grid{grid-template-columns:1fr}}
+    .card{background:var(--card);border:1px solid #1e2a44;border-radius:18px;padding:16px 16px 12px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    h2{margin:4px 0 12px 0;font-size:18px;letter-spacing:.3px}
+    label{font-size:13px;color:var(--muted)}
+    input,select,textarea{width:100%;background:#0c1530;border:1px solid #233355;color:var(--ink);padding:12px 12px;border-radius:12px;font-size:14px}
+    textarea{min-height:92px;resize:vertical}
+    .row{display:grid;grid-template-columns:repeat(12,1fr);gap:10px;margin-bottom:10px}
+    .col-6{grid-column:span 6}.col-4{grid-column:span 4}.col-8{grid-column:span 8}
+    .col-3{grid-column:span 3}.col-12{grid-column:span 12}.col-2{grid-column:span 2}
+    .row > *, .grid > * {min-width:0;}
+    .pill{display:inline-flex;align-items:center;gap:8px;background:#0a1330;border:1px solid #203154;border-radius:999px;padding:8px 12px;font-size:12px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid #2a3d66;background:linear-gradient(180deg,#0e1b38,#0d1a33);padding:10px 14px;border-radius:12px;color:var(--ink);text-decoration:none;cursor:pointer}
+    .btn:hover{border-color:#32508e}
+    .btn.primary{background:linear-gradient(180deg,#0ea5ff,#0075ff);color:#051027;border-color:transparent;font-weight:700}
+    .btn.ghost{background:transparent}
+    .actions{display:flex;flex-wrap:wrap;gap:10px}
+    .muted{color:var(--muted)}
+    .hr{height:1px;background:#1e2a44;margin:12px 0}
+    .preview{white-space:pre-wrap;background:#0a1226;border:1px dashed #30456f;border-radius:12px;padding:12px;overflow-wrap:anywhere;word-break:break-word;max-width:100%;}
+    .footer{font-size:12px;color:var(--muted);text-align:center;margin:18px 0}
+    .linkish{color:var(--ink);opacity:.9}
+    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .kpi{background:#0c1630;border:1px solid #22345a;border-radius:12px;padding:10px;cursor:pointer}
+    .kpi b{font-size:18px}
+    .centered{display:flex;align-items:center;justify-content:center;min-height:55vh;flex-direction:column;gap:12px;text-align:center}
+    .login-card input{max-width:340px;margin:0 auto;display:block}
+    @media print{header,.no-print{display:none !important} body{background:#fff;color:#000} .card{border:none;box-shadow:none} .preview{background:#fff;border:1px solid #ccc} }
+    dialog{background:#0c1530;border:1px solid #2a3d66;color:var(--ink);border-radius:14px;max-width:640px}
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo" aria-label="Danbury Wheel Chair Service">
+    <img src="./icons/icon-192.png" alt="DW"/>
+    <div>
+      <div style="font-size:15px;line-height:1">Danbury Wheel Chair Service</div>
+      <div class="pill" id="rolePill">—</div>
+    </div>
+  </div>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:10px" class="no-print">
+    <button id="btnInstall" class="btn">Install</button>
+    <select id="langSel" class="btn">
+      <option value="auto">🌐 Auto</option><option value="es">ES</option><option value="en">EN</option>
+    </select>
+    <button id="btnSignOut" class="btn" style="display:none">Sign out</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- Landing / Login -->
+  <section id="sectionAuth" class="card centered login-card" style="display:none">
+    <img src="./icons/icon-192.png" width="72" height="72" alt="DW"/>
+    <h2 id="welcomeTitle">Welcome</h2>
+    <div class="muted" id="welcomeSub">Sign in to continue</div>
+    <div class="row" style="max-width:380px;width:100%">
+      <div class="col-12"><input id="email" placeholder="email" autocomplete="username"/></div>
+      <div class="col-12"><input id="password" placeholder="password" type="password" autocomplete="current-password"/></div>
+      <div class="col-12 actions"><button id="btnSignIn" class="btn primary" style="width:100%">Sign in</button></div>
+    </div>
+    <div class="muted" style="margin-top:10px">
+      © 2025 Danbury Wheel Chair Service · On time, every time! · (203) 748 3433 · www.danburywheelchairservice.com
+    </div>
+  </section>
+
+  <!-- Dispatcher UI -->
+  <div id="dispatcherUI" style="display:none">
+    <div class="grid">
+      <section class="card" id="formCard">
+        <h2 id="title_form">New dispatch</h2>
+        <div class="row">
+          <div class="col-6">
+            <label id="lbl_client">Client / Requester</label>
+            <input id="clientName" placeholder="Name & phone"/>
+          </div>
+          <div class="col-6">
+            <label id="lbl_client_phone">Client phone/email</label>
+            <input id="clientContact" placeholder="+1 … or email"/>
+          </div>
+          <div class="col-8">
+            <label id="lbl_pick">Pickup (origin)</label>
+            <input id="from" placeholder="Exact address…"/>
+          </div>
+          <div class="col-4">
+            <label id="lbl_pick_time">Date/Time</label>
+            <input id="pickupAt" type="datetime-local"/>
+          </div>
+          <div class="col-12">
+            <label id="lbl_drop">Dropoff (destination)</label>
+            <input id="to" placeholder="Address or reference…"/>
+          </div>
+          <div class="col-6">
+            <label id="lbl_passenger">Passenger</label>
+            <input id="passenger" placeholder="First and last name"/>
+          </div>
+          <div class="col-2">
+            <label id="lbl_age">Age</label>
+            <input id="age" type="number" min="0" max="120"/>
+          </div>
+          <div class="col-4">
+            <label id="lbl_companions">Companions</label>
+            <input id="companions" type="number" min="0" value="0"/>
+          </div>
+          <div class="col-12">
+            <label id="lbl_needs">Needs / Accessibility</label>
+            <div class="row">
+              <div class="col-4"><label class="pill"><input type="checkbox" id="needWheel"/> Wheelchair</label></div>
+              <div class="col-4"><label class="pill"><input type="checkbox" id="needBari"/> Bariatric chair</label></div>
+              <div class="col-4"><label class="pill"><input type="checkbox" id="needStret"/> Stretcher</label></div>
+              <div class="col-4"><label class="pill"><input type="checkbox" id="needOxy"/> Oxygen</label></div>
+              <div class="col-8"><label class="pill"><input type="checkbox" id="needExtra"/> Extra staff</label></div>
+            </div>
+          </div>
+          <div class="col-4">
+            <label id="lbl_floor">Destination floor</label>
+            <input id="floor" type="number" min="0" value="0"/>
+          </div>
+          <div class="col-4">
+            <label id="lbl_no_elev">No elevator?</label>
+            <select id="noElev"><option value="no">No</option><option value="yes">Yes</option></select>
+          </div>
+          <div class="col-4">
+            <label id="lbl_steps"># steps</label>
+            <input id="steps" type="number" min="0" value="0"/>
+          </div>
+          <div class="col-4">
+            <label id="lbl_price">Price (USD)</label>
+            <input id="price" type="number" min="0" step="0.01"/>
+          </div>
+          <div class="col-8">
+            <label id="lbl_notes">Notes</label>
+            <input id="notes" placeholder="Additional instructions…"/>
+          </div>
+          <div class="col-12">
+            <label id="lbl_driver">Driver / Vehicle</label>
+            <select id="driverSel"></select>
+            <div class="muted" id="driverInfo"></div>
+          </div>
+        </div>
+        <div class="actions no-print">
+          <button class="btn primary" id="btnPreview">Generate summary</button>
+          <a class="btn" id="btnMap" target="_self">Open map</a>
+          <button class="btn" id="btnClientData">Client data</button>
+          <button class="btn ghost" id="btnPrint">Print</button>
+        </div>
+        <div class="hr"></div>
+        <div>
+          <label class="muted" id="lbl_preview">Message preview</label>
+          <div id="preview" class="preview"></div>
+        </div>
+      </section>
+
+      <aside class="card">
+        <h2 id="title_fleet">Drivers</h2>
+        <div id="fleetList"></div>
+        <div class="hr"></div>
+        <div class="kpis">
+          <div class="kpi" id="kpiTodayCard"><div class="muted" id="kpi_today">Jobs today</div><b id="kpiToday">0</b></div>
+          <div class="kpi" id="kpiPendingCard"><div class="muted" id="kpi_pending">Scheduled</div><b id="kpiPending">0</b></div>
+          <div class="kpi"><div class="muted" id="kpi_drivers">Drivers</div><b id="kpiDrivers">—</b></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Driver UI -->
+  <div id="driverUI" style="display:none">
+    <section class="card">
+      <h2 id="drv_title">My jobs</h2>
+      <div class="actions">
+        <span class="pill">✅ <b id="drv_done_lbl">Trips done</b>: <span id="drv_done_count">0</span></span>
+        <span class="pill">🗓️ <b id="drv_sched_lbl">Scheduled</b>: <span id="drv_sched_count">0</span></span>
+      </div>
+      <div class="hr"></div>
+      <div class="row">
+        <div class="col-12">
+          <h3>Today</h3>
+          <div id="drv_today" class="preview">(empty)</div>
+        </div>
+        <div class="col-12">
+          <h3>Upcoming</h3>
+          <div id="drv_upcoming" class="preview">(empty)</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="footer no-print">© 2025 Danbury Wheel Chair Service • <a class="linkish" href="#" id="openHowTo">How to install</a></div>
+</div>
+
+<dialog id="howTo">
+  <form method="dialog" style="margin:0">
+    <div style="padding:16px 16px 4px"><b>Install on iPhone/iPad</b></div>
+    <div style="padding:0 16px 12px" class="muted">1) Open in Safari · 2) Tap <b>Share</b> · 3) <b>Add to Home Screen</b> · 4) Confirm.</div>
+    <div style="display:flex;justify-content:flex-end;padding:0 12px 12px"><button class="btn">OK</button></div>
+  </form>
+</dialog>
+
+<dialog id="listDlg">
+  <form method="dialog" style="margin:0">
+    <div style="padding:16px 16px 4px"><b id="listDlgTitle">Items</b></div>
+    <div style="padding:0 16px 12px; max-height:50vh; overflow:auto">
+      <div id="listDlgBody" class="preview"></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;padding:0 12px 12px"><button class="btn">Close</button></div>
+  </form>
+</dialog>
+
+<dialog id="clientDlg">
+  <form method="dialog" style="margin:0">
+    <div style="padding:16px 16px 4px"><b>Client data</b></div>
+    <div style="padding:0 16px 12px">
+      <div class="row">
+        <div class="col-12"><input id="clientSendTo" placeholder="WhatsApp (+1...), SMS (+1...), or email"/></div>
+        <div class="col-12 actions">
+          <button class="btn" id="sendToWA">Send WhatsApp</button>
+          <button class="btn" id="sendToSMS">Send SMS</button>
+          <button class="btn" id="sendToEmail">Send Email</button>
+        </div>
+      </div>
+      <div id="clientPreview" class="preview"></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;padding:0 12px 12px"><button class="btn">Close</button></div>
+  </form>
+</dialog>
+
+<script type="module">
+  // Firebase v10+ modular
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+  import { getFirestore, collection, addDoc, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-analytics.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBIBq4ZsRADoKRNoJZkNq-dLWirlSotIPc",
+    authDomain: "tripfast-d359d.firebaseapp.com",
+    projectId: "tripfast-d359d",
+    storageBucket: "tripfast-d359d.firebasestorage.app",
+    messagingSenderId: "559477235356",
+    appId: "1:559477235356:web:a311792f680f5fd5995759",
+    measurementId: "G-CSRR8VWYFZ"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  try { getAnalytics(app); } catch(e) { /* analytics optional */ }
+
+  const DISPATCHERS = ["donbeltranmusic@gmail.com"];
+  const DRIVERS = ["fmluisorlando@gmail.com"]; // default active driver
+
+  const COMPANY = {
+    name: "Danbury Wheel Chair Service",
+    slogan: "On time, every time!",
+    phone: "(203) 748 3433",
+    web: "www.danburywheelchairservice.com"
+  };
+
+  const $ = (s)=>document.querySelector(s);
+
+  function getLang(){ const forced = localStorage.getItem('tf_lang_forced'); if(forced && forced!=='auto') return forced; return (navigator.language||'es').toLowerCase().startsWith('es')?'es':'en'; }
+  const sel=document.getElementById('langSel'); sel.value=localStorage.getItem('tf_lang_forced')||'auto'; sel.addEventListener('change',()=>{ localStorage.setItem('tf_lang_forced', sel.value); location.reload(); });
+
+  const DEFAULT_DRIVERS = [
+    {id:'YbrStIOyf7NGabgUvlkbOqiR7cq2', email:'fmluisorlando@gmail.com', name:'Luis Orlando', phone:'+1', vehicle:'Ford Transit', plate:'—', whatsapp:'+1'},
+  ];
+  let fleet = [...DEFAULT_DRIVERS];
+
+  async function loadDrivers(){
+    try{
+      const snap = await getDocs(collection(db, 'drivers'));
+      const list = [];
+      snap.forEach(d=> list.push(d.data()));
+      if(list.length) fleet = list;
+    }catch(e){ /* optional */ }
+  }
+
+  function paintFleet(){
+    document.getElementById('kpiDrivers').textContent = fleet.length;
+    const sel = document.getElementById('driverSel'); sel.innerHTML='';
+    fleet.forEach(d=>{ const opt=document.createElement('option'); opt.value=d.id||d.uid||d.email; opt.textContent=`${d.name||d.email} • ${d.vehicle||''} • ${d.plate||''}`; sel.appendChild(opt); });
+    const list = document.getElementById('fleetList'); list.innerHTML = fleet.map(d=>`<div class="pill" style="margin:4px 6px 6px 0;display:flex;justify-content:space-between;align-items:center;width:100%"><span>🚗 <b>${d.name||d.email}</b> · ${d.vehicle||'—'} · ${d.plate||'—'} · <span class="muted">${d.phone||''}</span></span></div>`).join('');
+    updateDriverInfo();
+  }
+  function findDriver(id){ return fleet.find(d=> (d.id||d.uid||d.email) == id) || fleet[0]; }
+  function updateDriverInfo(){ const d=findDriver(document.getElementById('driverSel').value); if(!d) return; document.getElementById('driverInfo').textContent = `Phone: ${d.phone||'—'} · WhatsApp: ${d.whatsapp||'—'} · Email: ${d.email||'—'}`; }
+  document.getElementById('driverSel')?.addEventListener('change', updateDriverInfo);
+
+  function accSummary(){ const items=[]; if(document.getElementById('needWheel').checked) items.push('Wheelchair'); if(document.getElementById('needBari').checked) items.push('Bariatric'); if(document.getElementById('needStret').checked) items.push('Stretcher'); if(document.getElementById('needOxy').checked) items.push('Oxygen'); if(document.getElementById('needExtra').checked) items.push('Extra staff'); return items.length? items.join(', ') : 'N/A'; }
+  function buildMapUrl(pickup, destination){ const enc=encodeURIComponent; const base="https://www.google.com/maps/dir/?api=1"; return `${base}&destination=${enc(destination)}&waypoints=${enc(pickup)}&travelmode=driving&dir_action=navigate`; }
+  function collect(){ const driver = findDriver(document.getElementById('driverSel').value); const from=document.getElementById('from').value.trim(); const to=document.getElementById('to').value.trim(); const mapUrl=(from&&to)?buildMapUrl(from,to):''; const pickupAt=document.getElementById('pickupAt').value? new Date(document.getElementById('pickupAt').value).toISOString() : null; return { clientName:document.getElementById('clientName').value.trim(), clientContact:document.getElementById('clientContact').value.trim(), from,to, pickupAt, passenger:document.getElementById('passenger').value.trim(), age:document.getElementById('age').value||'', companions:document.getElementById('companions').value||'0', acc:accSummary(), floor:document.getElementById('floor').value||'0', noElev:document.getElementById('noElev').value, steps:document.getElementById('steps').value||'0', price:document.getElementById('price').value||'', notes:document.getElementById('notes').value.trim(), driver, mapUrl }; }
+
+  function companyFooter(){ return `\n\n— ${COMPANY.name} • ${COMPANY.slogan}\n☎ ${COMPANY.phone} • ${COMPANY.web}`; }
+  function renderPreview(){ const o=collect(); const when = o.pickupAt ? new Date(o.pickupAt).toLocaleString(getLang()==='es'?'es-ES':'en-US') : '-'; const msg = `Client: ${o.clientName} (${o.clientContact})\nPassenger: ${o.passenger} • Age: ${o.age || '-'} • Companions: ${o.companions}\nPickup: ${o.from}\nDropoff: ${o.to}\nWhen: ${when}\nAccessibility: ${o.acc}\nBuilding: Floor ${o.floor} • ${o.noElev==='yes'?'No elevator':'Elevator'} • Steps: ${o.steps}\nNotes: ${o.notes || '-'}\nPrice: ${o.price || '-'}\n\nROUTE: ${o.mapUrl}\n\nAssigned to: ${(o.driver?.name)||o.driver?.email}` + companyFooter(); document.getElementById('preview').textContent = msg; return { msg, data:o }; }
+
+  async function saveJob(){
+    const {data} = renderPreview();
+    if(!data.driver) return alert('Pick a driver');
+    const jobs = collection(db, 'jobs');
+    const job = {
+      createdAt: serverTimestamp(),
+      pickupAt: data.pickupAt ? new Date(data.pickupAt) : null,
+      from: data.from, to: data.to, mapUrl: data.mapUrl,
+      passenger: data.passenger, age: data.age, companions: data.companions,
+      needs: data.acc, floor: data.floor, noElev: data.noElev, steps: data.steps,
+      price: data.price, notes: data.notes,
+      clientName: data.clientName, clientContact: data.clientContact,
+      driverRef: data.driver.id||data.driver.uid||data.driver.email,
+      driverEmail: data.driver.email||null,
+      status: 'scheduled'
+    };
+    await addDoc(jobs, job);
+    await refreshKPIs();
+    alert(getLang()==='es'? 'Despacho guardado y enviado al conductor.':'Saved and sent to driver.');
+  }
+
+  async function refreshKPIs(){
+    const all = await getDocs(query(collection(db,'jobs')));
+    let today=0, future=0;
+    const now = new Date();
+    const todayStr = now.toDateString();
+    all.forEach(d=>{ const j=d.data(); const when=j.pickupAt?.toDate? j.pickupAt.toDate() : (j.pickupAt? new Date(j.pickupAt):null); if(!when) return; if(when.toDateString()===todayStr) today++; if(when>now) future++; });
+    document.getElementById('kpiToday').textContent=String(today);
+    document.getElementById('kpiPending').textContent=String(future);
+  }
+
+  async function loadDriverJobs(user){
+    const my = await getDocs(query(collection(db,'jobs'), where('driverRef','==', user.uid||user.email)));
+    const now = new Date();
+    const todayStr = now.toDateString();
+    const today=[], upcoming=[], done=[];
+    my.forEach(d=>{ const j=d.data(); const when=j.pickupAt?.toDate? j.pickupAt.toDate() : (j.pickupAt? new Date(j.pickupAt):null); const base = `# ${j.passenger} — ${j.from} → ${j.to}\nWhen: ${when?when.toLocaleString(): '-' }\nPrice: ${j.price || '-'}\nNeeds: ${j.needs || 'N/A'}\nROUTE: ${j.mapUrl}` + companyFooter(); if(when && when<now) done.push(base); if(when && when.toDateString()===todayStr) today.push(base); if(when && when>now) upcoming.push(base); });
+    document.getElementById('drv_today').textContent = today.join('\n\n') || '(empty)';
+    document.getElementById('drv_upcoming').textContent = upcoming.join('\n\n') || '(empty)';
+    document.getElementById('drv_done_count').textContent = String(done.length);
+    document.getElementById('drv_sched_count').textContent = String(upcoming.length);
+  }
+
+  const sectionAuth = document.getElementById('sectionAuth');
+  const dispatcherUI = document.getElementById('dispatcherUI');
+  const driverUI = document.getElementById('driverUI');
+  const rolePill = document.getElementById('rolePill');
+  const btnSignIn = document.getElementById('btnSignIn');
+  const btnSignOut = document.getElementById('btnSignOut');
+
+  btnSignIn.addEventListener('click', async ()=>{ const email=document.getElementById('email').value.trim(); const password=document.getElementById('password').value; try{ await signInWithEmailAndPassword(auth,email,password); }catch(e){ alert('Login error: '+e.message); } });
+  btnSignOut.addEventListener('click', async ()=>{ await signOut(auth); });
+
+  function showOnly(section){
+    sectionAuth.style.display='none'; dispatcherUI.style.display='none'; driverUI.style.display='none';
+    section.style.display='block';
+  }
+
+  function landing(){ showOnly(sectionAuth); }
+
+  onAuthStateChanged(auth, async (user)=>{
+    if(!user){
+      rolePill.textContent='—'; landing(); return;
+    }
+    document.getElementById('btnSignOut').style.display='inline-flex';
+    await loadDrivers();
+    paintFleet();
+    const email = user.email||'';
+    if(DISPATCHERS.includes(email)){
+      rolePill.textContent = 'Dispatcher';
+      showOnly(dispatcherUI);
+      await refreshKPIs();
+    } else if (DRIVERS.includes(email)) {
+      rolePill.textContent = 'Driver';
+      showOnly(driverUI);
+      await loadDriverJobs(user);
+    } else {
+      rolePill.textContent = 'User';
+      landing();
+      alert('No role assigned for this account.');
+    }
+  });
+
+  document.getElementById('btnPreview').addEventListener('click', renderPreview);
+  document.getElementById('btnMap').addEventListener('click', ()=>{ const {data} = renderPreview(); if(!data.mapUrl) return alert('Complete origin and destination'); document.getElementById('btnMap').href=data.mapUrl; });
+  document.getElementById('btnPrint').addEventListener('click', ()=>window.print());
+  document.getElementById('btnClientData').addEventListener('click', ()=>{ const {msg}=renderPreview(); document.getElementById('clientPreview').textContent=msg; document.getElementById('clientDlg').showModal(); });
+  document.getElementById('sendToWA').addEventListener('click',(e)=>{ e.preventDefault(); const to=document.getElementById('clientSendTo').value.replace(/\D/g,''); const {msg}=renderPreview(); if(!to) return; window.open(`https://wa.me/${to}?text=${encodeURIComponent(msg)}`,'_blank'); });
+  document.getElementById('sendToSMS').addEventListener('click',(e)=>{ e.preventDefault(); const to=document.getElementById('clientSendTo').value.replace(/\D/g,''); const {msg}=renderPreview(); if(!to) return; const body=encodeURIComponent(msg); const url = navigator.userAgent.match(/(iPhone|iPad)/) ? `sms:${to}&body=${body}` : `sms:${to}?body=${body}`; location.href=url; });
+  document.getElementById('sendToEmail').addEventListener('click',(e)=>{ e.preventDefault(); const to=document.getElementById('clientSendTo').value.trim(); const {msg}=renderPreview(); if(!to) return; const subject=encodeURIComponent('Dispatch'); window.open(`mailto:${to}?subject=${subject}&body=${encodeURIComponent(msg)}`,'_blank'); });
+
+  document.getElementById('btnPreview').addEventListener('click', async ()=>{ const user=auth.currentUser; if(user && DISPATCHERS.includes(user.email||'')) { try{ await saveJob(); }catch(e){ console.error(e); alert('Could not save job'); } } });
+
+  document.getElementById('openHowTo').addEventListener('click',(e)=>{ e.preventDefault(); document.getElementById('howTo').showModal(); });
+  const installBtn = document.getElementById('btnInstall'); let deferredPrompt=null;
+  function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; }
+  function refreshInstallVisibility(){ installBtn.style.display = isStandalone() ? 'none' : 'inline-flex'; }
+  refreshInstallVisibility();
+  window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt=e; refreshInstallVisibility(); installBtn.onclick=async ()=>{ if(!deferredPrompt) return; installBtn.disabled=true; try{ deferredPrompt.prompt(); const {outcome} = await deferredPrompt.userChoice; if(outcome==='accepted') installBtn.style.display='none'; } finally { installBtn.disabled=false; deferredPrompt=null; } }; });
+  window.addEventListener('appinstalled', ()=>{ installBtn.style.display='none'; deferredPrompt=null; });
+  document.addEventListener('visibilitychange', refreshInstallVisibility);
+
+  if('serviceWorker' in navigator){ window.addEventListener('load', ()=>{ navigator.serviceWorker.register('./sw.js?v=dwcs-v1'); }); }
+</script>
+</body>
+</html>
