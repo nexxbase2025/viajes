@@ -534,80 +534,81 @@
   $('#btnExport').addEventListener('click', (e)=>{ e.preventDefault(); const data = JSON.stringify(getLocalJobs(), null, 2); const blob=new Blob([data],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='dwcs-backup.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 1000); });
   $('#btnClearLocal').addEventListener('click', (e)=>{ e.preventDefault(); if(confirm('Clear local data?')){ localStorage.removeItem('dwcs_jobs'); refreshLocalInfo(); refreshKPIs(); } });
 
-  // PWA install + SW
-  let deferredPrompt=null;
-  const btnInstall=document.getElementById('btnInstall');
-  function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true; }
-  function isIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
-
-  function showAndroidHowTo(){
-    const dlg=document.getElementById('howTo'); if(!dlg) return;
-    const body=document.getElementById('howto_body'); if(body){
-      body.innerHTML=(getLang && getLang()==='es')
-        ? "Toca <b>Instalar</b> para agregar esta app a tu pantalla de inicio."
-        : "Tap <b>Install</b> to add this app to your home screen.";
-    }
-    dlg.showModal();
-  }
-
-  function showIOSHowTo(){
-    const dlg=document.getElementById('howTo'); if(!dlg) return;
-    const body=document.getElementById('howto_body'); if(body){
-      // Usa la cadena i18n existente
-      body.innerHTML = (typeof t==='function') ? t('howto_body') :
-        "Open in Safari → Share → Add to Home Screen → Confirm.";
-    }
-    dlg.showModal();
-  }
-
-  function updateInstallUI(){
-    if(!btnInstall) return;
-    if(isStandalone()){
-      btnInstall.style.display='none';
-      return;
-    }
-    if(isIOS()){
-      // iOS: siempre mostrar el botón para instrucciones
-      btnInstall.style.display='inline-flex';
-      btnInstall.onclick=()=>{ showIOSHowTo(); };
-      return;
-    }
-    // Android/otros: mostrar botón solo cuando el evento esté disponible
-    btnInstall.style.display = deferredPrompt ? 'inline-flex' : 'none';
-    btnInstall.onclick=async()=>{
-      if(!deferredPrompt) return;
-      try{
-        deferredPrompt.prompt();
-        const {outcome}=await deferredPrompt.userChoice;
-        if(outcome==='accepted'){
-          btnInstall.style.display='none';
-        }
-      }finally{
-        deferredPrompt=null;
-      }
-    };
-  }
-
-  // ANDROID: capturar el evento y habilitar el botón
-  window.addEventListener('beforeinstallprompt',(e)=>{
-    e.preventDefault();
-    deferredPrompt=e;
-    updateInstallUI();
-  });
-
-  window.addEventListener('appinstalled',()=>{
-    deferredPrompt=null;
-    if(btnInstall) btnInstall.style.display='none';
-  });
-
-  // iOS: ya no mostramos automáticamente; usamos el botón
-
   // Registrar SW (se mantiene igual)
-  if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('./sw.js?v=dwcs-v5'); }); }
+  if('serviceWorker' in navigator){ 
+    window.addEventListener('load',()=>{ 
+      navigator.serviceWorker.register('./sw.js?v=dwcs-v5'); 
+    }); 
+  }
 
-  // Initial
-  updateInstallUI();
+  // --- Detectar idioma desde el inicio
   applyI18n();
+
+  // --- PWA / Burbuja Install ---
+  const btnInstall = document.getElementById("btnInstall");
+
+  function isStandalone() {
+    return (
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true
+    );
+  }
+
+  function isAndroid() {
+    return /Android/i.test(navigator.userAgent);
+  }
+
+  function isIOS() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  }
+
+  function updateInstallButton() {
+    if (isStandalone()) {
+      btnInstall.style.display = "none";
+      return;
+    }
+    if (isAndroid()) {
+      btnInstall.style.display = "inline-flex";
+      btnInstall.onclick = () => {
+        if (window.deferredPrompt) {
+          window.deferredPrompt.prompt();
+          window.deferredPrompt.userChoice.then(({ outcome }) => {
+            if (outcome === "accepted") {
+              btnInstall.style.display = "none";
+            }
+            window.deferredPrompt = null;
+          });
+        } else {
+          alert(
+            getLang() === "es"
+              ? "Para instalar, usa el menú del navegador y selecciona 'Añadir a pantalla principal'."
+              : "To install, use the browser menu and select 'Add to Home screen'."
+          );
+        }
+      };
+      return;
+    }
+    if (isIOS()) {
+      btnInstall.style.display = "inline-flex";
+      btnInstall.onclick = () => {
+        const dlg = document.getElementById("howTo");
+        dlg.showModal();
+      };
+    }
+  }
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    window.deferredPrompt = e;
+    updateInstallButton();
+  });
+
+  window.addEventListener("appinstalled", () => {
+    btnInstall.style.display = "none";
+  });
+
+  // Inicial
+  updateInstallButton();
 </script>
 </body>
 </html>
