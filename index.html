@@ -163,7 +163,7 @@
           <button class="btn" id="btnClientData"><span data-i18n="client_data">Client data</span></button>
           <button class="btn ghost" id="btnPrint" data-i18n="print">Print</button>
           <button class="btn" id="btnBackup" data-i18n="backup">Set backup</button>
-          
+          <button class="btn" id="btnSaveNow" data-i18n="save_now">Save now</button>
         </div>
         <div class="hr"></div>
         <div>
@@ -207,7 +207,7 @@
     </section>
   </div>
 
-  <div class="footer no-print">© 2025 Danbury Wheel Chair Service • </div>
+  <div class="footer no-print">© 2025 Danbury Wheel Chair Service • <a class="linkish" href="#" id="openHowTo" data-i18n="how_to_install">How to install</a></div>
 </div>
 
 <!-- How to install -->
@@ -259,7 +259,6 @@
       <div class="hr"></div>
       <div class="actions">
         <button class="btn" id="btnExport" data-i18n="export_json">Export JSON</button>
-        <button class="btn" id="btnExportTXT">Export TXT</button>
         <button class="btn" id="btnClearLocal" data-i18n="clear_local">Clear local</button>
       </div>
       <div class="muted" id="localInfo"></div>
@@ -544,18 +543,28 @@
   if('serviceWorker' in navigator){ window.addEventListener('load', ()=>{ navigator.serviceWorker.register('./sw.js?v=dwcs-v5'); }); }
 
   
-  function isIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
-  if(isIOS() && !localStorage.getItem('dwcs_ios_hint_shown')){
-    alert("Para instalar en iPhone/iPad: 1) Abre en Safari, 2) Toca Compartir, 3) Añadir a pantalla de inicio, 4) Confirmar.");
-    localStorage.setItem('dwcs_ios_hint_shown','1');
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const installBtn = document.getElementById('installBtn');
+  if (installBtn) {
+    installBtn.style.display = 'block';
+    installBtn.addEventListener('click', async () => {
+      installBtn.style.display = 'none';
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        console.log('App instalada');
+      }
+      deferredPrompt = null;
+    });
   }
-
-  
-  // Hide install bubble if already installed
-  if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
-    const installBtn = document.getElementById('installBtn');
-    if (installBtn) installBtn.style.display = 'none';
-  }
+});
+if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+  const installBtn = document.getElementById('installBtn');
+  if (installBtn) installBtn.style.display = 'none';
+}
 
   // Initial i18n
   applyI18n();
