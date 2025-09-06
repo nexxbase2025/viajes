@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -347,7 +346,7 @@
   function t(k){ const lang=getLang(); return STR[lang][k]||STR.en[k]||k; }
   function applyI18n(){
     document.querySelectorAll('[data-i18n]').forEach(el=>{ const key=el.getAttribute('data-i18n'); el.innerHTML=t(key); });
-    const placeholders=[["#email","email","correo"],["#password","password","contraseña"],["#clientName","Name and phone","Nombre y teléfono"],["#clientContact","+1 … or email","+1 … o correo"],["#from","Exact address…","Dirección exacta…"],["#to","Address or reference…","Dirección o referencia…"],["#passenger","First and last name","Nombre y apellido"],["#notes","Additional instructions…","Indicaciones adicionales…"],["#clientSendTo","WhatsApp (+1...), SMS (+1...), or email","WhatsApp (+1...), SMS (+1...) o correo"]];
+    const placeholders=[['#email','email','correo'],['#password','password','contraseña'],['#clientName','Name and phone','Nombre y teléfono'],['#clientContact','+1 … or email','+1 … o correo'],['#from','Exact address…','Dirección exacta…'],['#to','Address or reference…','Dirección o referencia…'],['#passenger','First and last name','Nombre y apellido'],['#notes','Additional instructions…','Indicaciones adicionales…'],['#clientSendTo','WhatsApp (+1...), SMS (+1...), or email','WhatsApp (+1...), SMS (+1...) o correo']];
     const es=getLang()==='es'; placeholders.forEach(([sel,en,esTxt])=>{ const el=document.querySelector(sel); if(el) el.setAttribute('placeholder', es?esTxt:en); });
     const pill=document.getElementById('rolePill'); if(pill.dataset.role){ const map={dispatcher:'dispatcher',driver:'driver_role',user:'user'}; pill.textContent=t(map[pill.dataset.role]||'user'); }
   }
@@ -534,56 +533,69 @@
   $('#btnExport').addEventListener('click', (e)=>{ e.preventDefault(); const data = JSON.stringify(getLocalJobs(), null, 2); const blob=new Blob([data],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='dwcs-backup.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 1000); });
   $('#btnClearLocal').addEventListener('click', (e)=>{ e.preventDefault(); if(confirm('Clear local data?')){ localStorage.removeItem('dwcs_jobs'); refreshLocalInfo(); refreshKPIs(); } });
 
-// PWA install + SW
-let deferredPrompt=null;
-function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true; }
+  // PWA install + SW
+  let deferredPrompt=null;
+  function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true; }
+  function isIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
 
-// === ANDROID POPUP ===
-function showAndroidHowTo(){
-  const dlg = document.getElementById('howTo');
-  if(!dlg) return;
-  // Cambiar contenido al idioma correcto
-  document.getElementById('howto_body').innerHTML = t('install') + " → " + (getLang()==='es'
-    ? "Toca el botón Instalar para agregar esta app a tu pantalla de inicio."
-    : "Tap Install to add this app to your home screen.");
-  dlg.showModal();
-  dlg.addEventListener('close', ()=> localStorage.setItem('dwcs_android_hint_shown','1'), {once:true});
-}
-
-// === IOS POPUP ===
-function showIOSHowTo(){
-  const dlg = document.getElementById('howTo');
-  if(!dlg) return;
-  // Texto multilenguaje ya lo tienes en STR (howto_body)
-  document.getElementById('howto_body').innerHTML = t('howto_body');
-  dlg.showModal();
-  dlg.addEventListener('close', ()=> localStorage.setItem('dwcs_ios_hint_shown','1'), {once:true});
-}
-
-// Manejo del evento de instalación
-window.addEventListener('beforeinstallprompt',(e)=>{
-  e.preventDefault();
-  deferredPrompt=e;
-  if(!isStandalone() && !localStorage.getItem('dwcs_android_hint_shown') && !isIOS()){
-    showAndroidHowTo();
-    // Al dar OK → lanzamos instalación
-    const btnOk = document.querySelector('#howTo button.btn');
-    if(btnOk){
-      btnOk.onclick = async ()=>{
-        dlg = document.getElementById('howTo');
-        dlg.close();
-        deferredPrompt.prompt();
-        const {outcome}=await deferredPrompt.userChoice;
-        if(outcome==='accepted') localStorage.setItem('dwcs_android_hint_shown','1');
-      };
+  function showAndroidHowTo(){
+    const dlg=document.getElementById('howTo'); if(!dlg) return;
+    const body=document.getElementById('howto_body'); if(body){
+      body.innerHTML=(getLang && getLang()==='es')
+        ? "Toca <b>Instalar</b> para agregar esta app a tu pantalla de inicio."
+        : "Tap <b>Install</b> to add this app to your home screen.";
     }
+    dlg.showModal();
+    dlg.addEventListener('close',()=>localStorage.setItem('dwcs_android_hint_shown','1'),{once:true});
   }
-});
 
-window.addEventListener('appinstalled', ()=>{ deferredPrompt=null; alert(t('installed')); });
+  function showIOSHowTo(){
+    const dlg=document.getElementById('howTo'); if(!dlg) return;
+    const body=document.getElementById('howto_body'); if(body){
+      // Usa la cadena i18n existente
+      body.innerHTML = (typeof t==='function') ? t('howto_body') :
+        "Open in Safari → Share → Add to Home Screen → Confirm.";
+    }
+    dlg.showModal();
+    dlg.addEventListener('close',()=>localStorage.setItem('dwcs_ios_hint_shown','1'),{once:true});
+  }
 
-// Detectar iOS
-function isIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
-if(isIOS() && !isStandalone() && !localStorage.getItem('dwcs_ios_hint_shown')){
-  showIOSHowTo();
-}
+  // ANDROID: manejar el evento de instalación nativo y mostrar nuestra burbuja
+  window.addEventListener('beforeinstallprompt',(e)=>{
+    e.preventDefault();
+    deferredPrompt=e;
+    // Mostrar solo si no está instalada ni mostrado antes y no es iOS
+    if(!isStandalone() && !localStorage.getItem('dwcs_android_hint_shown') && !isIOS()){
+      showAndroidHowTo();
+      const btnOk=document.querySelector('#howTo button.btn');
+      if(btnOk){
+        btnOk.onclick=async()=>{
+          const dlg=document.getElementById('howTo'); if(dlg) dlg.close();
+          try{
+            deferredPrompt.prompt();
+            const {outcome}=await deferredPrompt.userChoice;
+            if(outcome==='accepted'){ localStorage.setItem('dwcs_android_hint_shown','1'); }
+          }finally{
+            deferredPrompt=null;
+          }
+        };
+      }
+    }
+  });
+
+  window.addEventListener('appinstalled',()=>{ deferredPrompt=null; /* opcional: toast */ });
+
+  // iOS: mostrar instrucciones una vez si no está instalada
+  if(isIOS() && !isStandalone() && !localStorage.getItem('dwcs_ios_hint_shown')){
+    showIOSHowTo();
+  }
+
+  // Registrar SW (se mantiene igual)
+  if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('./sw.js?v=dwcs-v5'); }); }
+
+  // Initial
+// Initial i18n
+  applyI18n();
+</script>
+</body>
+</html>
