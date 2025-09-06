@@ -534,33 +534,56 @@
   $('#btnExport').addEventListener('click', (e)=>{ e.preventDefault(); const data = JSON.stringify(getLocalJobs(), null, 2); const blob=new Blob([data],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='dwcs-backup.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 1000); });
   $('#btnClearLocal').addEventListener('click', (e)=>{ e.preventDefault(); if(confirm('Clear local data?')){ localStorage.removeItem('dwcs_jobs'); refreshLocalInfo(); refreshKPIs(); } });
 
-  // PWA install + SW
-  const installBtn=$('#btnInstall'); let deferredPrompt=null;
-  function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true; }
-  function refreshInstallVisibility(){ installBtn.style.display = isStandalone() ? 'none' : 'inline-flex'; installBtn.textContent=t('install'); }
-  refreshInstallVisibility();
-  window.addEventListener('beforeinstallprompt',(e)=>{ e.preventDefault(); deferredPrompt=e; refreshInstallVisibility(); installBtn.onclick=async ()=>{ if(!deferredPrompt) return; installBtn.disabled=true; try{ deferredPrompt.prompt(); const {outcome}=await deferredPrompt.userChoice; if(outcome==='accepted') installBtn.style.display='none'; } finally { installBtn.disabled=false; deferredPrompt=null; } }; });
-  window.addEventListener('appinstalled', ()=>{ installBtn.style.display='none'; deferredPrompt=null; alert(t('installed')); });
-  document.addEventListener('visibilitychange', refreshInstallVisibility);
-  if('serviceWorker' in navigator){ window.addEventListener('load', ()=>{ navigator.serviceWorker.register('./sw.js?v=dwcs-v5'); }); }
+// PWA install + SW
+let deferredPrompt=null;
+function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true; }
 
-  
-  function isIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
-  // 🔄 Reemplazo del alert por burbuja (dialog)
-  function showIOSHowTo(){
-    const dlg = document.getElementById('howTo');
-    if(!dlg) return;
-    dlg.showModal();
-    dlg.addEventListener('close', ()=>{
-      localStorage.setItem('dwcs_ios_hint_shown','1');
-    }, {once:true});
-  }
-  if(isIOS() && !isStandalone() && !localStorage.getItem('dwcs_ios_hint_shown')){
-    showIOSHowTo();
-  }
+// === ANDROID POPUP ===
+function showAndroidHowTo(){
+  const dlg = document.getElementById('howTo');
+  if(!dlg) return;
+  // Cambiar contenido al idioma correcto
+  document.getElementById('howto_body').innerHTML = t('install') + " → " + (getLang()==='es'
+    ? "Toca el botón Instalar para agregar esta app a tu pantalla de inicio."
+    : "Tap Install to add this app to your home screen.");
+  dlg.showModal();
+  dlg.addEventListener('close', ()=> localStorage.setItem('dwcs_android_hint_shown','1'), {once:true});
+}
 
-  // Initial i18n
-  applyI18n();
-</script>
-</body>
-</html>
+// === IOS POPUP ===
+function showIOSHowTo(){
+  const dlg = document.getElementById('howTo');
+  if(!dlg) return;
+  // Texto multilenguaje ya lo tienes en STR (howto_body)
+  document.getElementById('howto_body').innerHTML = t('howto_body');
+  dlg.showModal();
+  dlg.addEventListener('close', ()=> localStorage.setItem('dwcs_ios_hint_shown','1'), {once:true});
+}
+
+// Manejo del evento de instalación
+window.addEventListener('beforeinstallprompt',(e)=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  if(!isStandalone() && !localStorage.getItem('dwcs_android_hint_shown') && !isIOS()){
+    showAndroidHowTo();
+    // Al dar OK → lanzamos instalación
+    const btnOk = document.querySelector('#howTo button.btn');
+    if(btnOk){
+      btnOk.onclick = async ()=>{
+        dlg = document.getElementById('howTo');
+        dlg.close();
+        deferredPrompt.prompt();
+        const {outcome}=await deferredPrompt.userChoice;
+        if(outcome==='accepted') localStorage.setItem('dwcs_android_hint_shown','1');
+      };
+    }
+  }
+});
+
+window.addEventListener('appinstalled', ()=>{ deferredPrompt=null; alert(t('installed')); });
+
+// Detectar iOS
+function isIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
+if(isIOS() && !isStandalone() && !localStorage.getItem('dwcs_ios_hint_shown')){
+  showIOSHowTo();
+}
