@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -60,7 +61,7 @@
     </div>
   </div>
   <div style="margin-left:auto;display:flex;align-items:center;gap:10px" class="no-print">
-    <button id="btnInstall" class="btn" data-i18n="install">Install</button>
+    <button id="btnInstall" class="btn" style="display:none" data-i18n="install">Install</button>
     <select id="langSel" class="btn" aria-label="Language">
       <option value="auto">🌐 Auto</option><option value="es">ES</option><option value="en">EN</option>
     </select>
@@ -346,7 +347,7 @@
   function t(k){ const lang=getLang(); return STR[lang][k]||STR.en[k]||k; }
   function applyI18n(){
     document.querySelectorAll('[data-i18n]').forEach(el=>{ const key=el.getAttribute('data-i18n'); el.innerHTML=t(key); });
-    const placeholders=[['#email','email','correo'],['#password','password','contraseña'],['#clientName','Name and phone','Nombre y teléfono'],['#clientContact','+1 … or email','+1 … o correo'],['#from','Exact address…','Dirección exacta…'],['#to','Address or reference…','Dirección o referencia…'],['#passenger','First and last name','Nombre y apellido'],['#notes','Additional instructions…','Indicaciones adicionales…'],['#clientSendTo','WhatsApp (+1...), SMS (+1...), or email','WhatsApp (+1...), SMS (+1...) o correo']];
+    const placeholders=[["#email","email","correo"],["#password","password","contraseña"],["#clientName","Name and phone","Nombre y teléfono"],["#clientContact","+1 … or email","+1 … o correo"],["#from","Exact address…","Dirección exacta…"],["#to","Address or reference…","Dirección o referencia…"],["#passenger","First and last name","Nombre y apellido"],["#notes","Additional instructions…","Indicaciones adicionales…"],["#clientSendTo","WhatsApp (+1...), SMS (+1...), or email","WhatsApp (+1...), SMS (+1...) o correo"]];
     const es=getLang()==='es'; placeholders.forEach(([sel,en,esTxt])=>{ const el=document.querySelector(sel); if(el) el.setAttribute('placeholder', es?esTxt:en); });
     const pill=document.getElementById('rolePill'); if(pill.dataset.role){ const map={dispatcher:'dispatcher',driver:'driver_role',user:'user'}; pill.textContent=t(map[pill.dataset.role]||'user'); }
   }
@@ -535,6 +536,7 @@
 
   // PWA install + SW
   let deferredPrompt=null;
+  const btnInstall=document.getElementById('btnInstall');
   function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true; }
   function isIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
 
@@ -546,7 +548,6 @@
         : "Tap <b>Install</b> to add this app to your home screen.";
     }
     dlg.showModal();
-    dlg.addEventListener('close',()=>localStorage.setItem('dwcs_android_hint_shown','1'),{once:true});
   }
 
   function showIOSHowTo(){
@@ -557,44 +558,55 @@
         "Open in Safari → Share → Add to Home Screen → Confirm.";
     }
     dlg.showModal();
-    dlg.addEventListener('close',()=>localStorage.setItem('dwcs_ios_hint_shown','1'),{once:true});
   }
 
-  // ANDROID: manejar el evento de instalación nativo y mostrar nuestra burbuja
+  function updateInstallUI(){
+    if(!btnInstall) return;
+    if(isStandalone()){
+      btnInstall.style.display='none';
+      return;
+    }
+    if(isIOS()){
+      // iOS: siempre mostrar el botón para instrucciones
+      btnInstall.style.display='inline-flex';
+      btnInstall.onclick=()=>{ showIOSHowTo(); };
+      return;
+    }
+    // Android/otros: mostrar botón solo cuando el evento esté disponible
+    btnInstall.style.display = deferredPrompt ? 'inline-flex' : 'none';
+    btnInstall.onclick=async()=>{
+      if(!deferredPrompt) return;
+      try{
+        deferredPrompt.prompt();
+        const {outcome}=await deferredPrompt.userChoice;
+        if(outcome==='accepted'){
+          btnInstall.style.display='none';
+        }
+      }finally{
+        deferredPrompt=null;
+      }
+    };
+  }
+
+  // ANDROID: capturar el evento y habilitar el botón
   window.addEventListener('beforeinstallprompt',(e)=>{
     e.preventDefault();
     deferredPrompt=e;
-    // Mostrar solo si no está instalada ni mostrado antes y no es iOS
-    if(!isStandalone() && !localStorage.getItem('dwcs_android_hint_shown') && !isIOS()){
-      showAndroidHowTo();
-      const btnOk=document.querySelector('#howTo button.btn');
-      if(btnOk){
-        btnOk.onclick=async()=>{
-          const dlg=document.getElementById('howTo'); if(dlg) dlg.close();
-          try{
-            deferredPrompt.prompt();
-            const {outcome}=await deferredPrompt.userChoice;
-            if(outcome==='accepted'){ localStorage.setItem('dwcs_android_hint_shown','1'); }
-          }finally{
-            deferredPrompt=null;
-          }
-        };
-      }
-    }
+    updateInstallUI();
   });
 
-  window.addEventListener('appinstalled',()=>{ deferredPrompt=null; /* opcional: toast */ });
+  window.addEventListener('appinstalled',()=>{
+    deferredPrompt=null;
+    if(btnInstall) btnInstall.style.display='none';
+  });
 
-  // iOS: mostrar instrucciones una vez si no está instalada
-  if(isIOS() && !isStandalone() && !localStorage.getItem('dwcs_ios_hint_shown')){
-    showIOSHowTo();
-  }
+  // iOS: ya no mostramos automáticamente; usamos el botón
 
   // Registrar SW (se mantiene igual)
   if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('./sw.js?v=dwcs-v5'); }); }
 
   // Initial
-// Initial i18n
+  updateInstallUI();
   applyI18n();
 </script>
 </body>
