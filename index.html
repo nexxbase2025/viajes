@@ -550,6 +550,13 @@
     localStorage.setItem('dwcs_ios_hint_shown','1');
   }
 
+  
+  // Hide install bubble if already installed
+  if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
+    const installBtn = document.getElementById('installBtn');
+    if (installBtn) installBtn.style.display = 'none';
+  }
+
   // Initial i18n
   applyI18n();
 </script>
