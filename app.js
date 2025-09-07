@@ -220,6 +220,7 @@ document.getElementById('btnPreview').addEventListener('click', ()=>{
   const id=saveLocalJob({...data,status:'draft'});
   refreshLocalInfo(); refreshKPIs();
   alert(t('saved_local'));
+  __dwcs_autoExport();
 });
 
 document.getElementById('btnSendDriver').addEventListener('click', async ()=>{
@@ -243,6 +244,7 @@ document.getElementById('btnSendDriver').addEventListener('click', async ()=>{
   addToLocalDriverInbox(driverKey, {...data,status:'sent'});
   refreshLocalInfo(); refreshKPIs();
   alert(serverOk? t('saved') : t('saved_server_fail'));
+  __dwcs_autoExport();
 });
 
 document.getElementById('btnMap').addEventListener('click', ()=>{ const {data}=renderPreview(); if(!data.mapUrl) return alert(t('alert_fill')); document.getElementById('btnMap').href=data.mapUrl; });
@@ -353,6 +355,156 @@ function __ensureExportWiring(){
     });
   }
 }
+
+
+// ===== Auto-save exports (TXT/JSON) ==================================
+// Lightweight IndexedDB helpers to store FileSystemHandles
+const __DWCS_IDB_NAME = 'dwcs_fs_handles';
+const __DWCS_IDB_STORE = 'handles';
+function __dwcs_idb_open(){
+  return new Promise((resolve, reject)=>{
+    const req = indexedDB.open(__DWCS_IDB_NAME, 1);
+    req.onupgradeneeded = (e)=>{
+      const db = req.result;
+      if(!db.objectStoreNames.contains(__DWCS_IDB_STORE)){
+        db.createObjectStore(__DWCS_IDB_STORE);
+      }
+    };
+    req.onsuccess = ()=>resolve(req.result);
+    req.onerror = ()=>reject(req.error);
+  });
+}
+function __dwcs_idb_get(key){
+  return __dwcs_idb_open().then(db=>new Promise((resolve,reject)=>{
+    const tx = db.transaction(__DWCS_IDB_STORE, 'readonly');
+    const st = tx.objectStore(__DWCS_IDB_STORE);
+    const rq = st.get(key);
+    rq.onsuccess = ()=>resolve(rq.result || null);
+    rq.onerror = ()=>reject(rq.error);
+  }));
+}
+function __dwcs_idb_set(key, val){
+  return __dwcs_idb_open().then(db=>new Promise((resolve,reject)=>{
+    const tx = db.transaction(__DWCS_IDB_STORE, 'readwrite');
+    const st = tx.objectStore(__DWCS_IDB_STORE);
+    const rq = st.put(val, key);
+    rq.onsuccess = ()=>resolve(true);
+    rq.onerror = ()=>reject(rq.error);
+  }));
+}
+
+function __dwcs_langIsEs(){ try { return getLang()==='es'; } catch(_) { try { return (navigator.language||'en').toLowerCase().startsWith('es'); } catch(__){ return false; } } }
+function __dwcs_injectToastStyles(){
+  if (document.getElementById('dwcs_toast_css')) return;
+  const css = document.createElement('style'); css.id='dwcs_toast_css';
+  css.textContent = '.dwcs-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);padding:10px 14px;border-radius:10px;border:1px solid rgba(0,0,0,.15);background:rgba(20,20,25,.92);color:#fff;font:600 14px/1.1 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:2147483647;opacity:0;transition:opacity .18s ease} .dwcs-toast.show{opacity:1}';
+  document.head.appendChild(css);
+}
+function __dwcs_toast(msgEn, msgEs){
+  __dwcs_injectToastStyles();
+  const el = document.createElement('div'); el.className='dwcs-toast'; el.textContent = (__dwcs_langIsEs() ? (msgEs||msgEn) : (msgEn||msgEs));
+  document.body.appendChild(el);
+  requestAnimationFrame(()=>el.classList.add('show'));
+  setTimeout(()=>{ el.classList.remove('show'); setTimeout(()=>el.remove(), 200); }, 1800);
+}
+
+function __dwcs_getLocalJobs(){ try{ return JSON.parse(localStorage.getItem('dwcs_jobs')||'[]'); }catch(_){ return []; } }
+function __dwcs_renderTXTFromJobs(arr){
+  const es = __dwcs_langIsEs();
+  const lines = arr.map((j,i)=>{
+    const when = j.pickupAt ? new Date(j.pickupAt).toLocaleString(es?'es-ES':'en-US') : '-';
+    const head = `#${i+1} ${j.passenger||'-'} — ${j.from||'-'} → ${j.to||'-'}`;
+    const body = [
+      (es?'Fecha/Hora: ':'Date/Time: ')+when,
+      (es?'Precio: ':'Price: ')+(j.price ?? '-'),
+      (es?'Acompañantes: ':'Companions: ')+(j.companions ?? '-'),
+      (es?'Necesidades: ':'Needs: ')+(j.acc || j.needs || 'N/A'),
+      (es?'Ruta: ':'Route: ')+(j.mapUrl || '-'),
+      (es?'Cliente: ':'Client: ')+(j.clientName || '-')+' ('+(j.clientContact || '-')+')',
+      (es?'Notas: ':'Notes: ')+(j.notes || '-')
+    ].join('\\n');
+    return head + '\\n' + body;
+  });
+  return lines.join('\\n\\n----------------------------------------\\n\\n');
+}
+
+async function __dwcs_writeFile(handle, content){
+  const writable = await handle.createWritable();
+  await writable.write(content);
+  await writable.close();
+}
+
+async function __dwcs_ensureTxtHandle(){
+  let h = await __dwcs_idb_get('txtHandle');
+  if(!h){
+    if(!window.showSaveFilePicker){
+      // No picker available (e.g., iOS Safari): fallback to auto-download
+      const blob = new Blob([__dwcs_renderTXTFromJobs(__dwcs_getLocalJobs())], {type:'text/plain'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download='dwcs-backup.txt'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 1000);
+      __dwcs_toast('Auto-saved to Downloads', 'Auto-guardado en Descargas');
+      return null;
+    }
+    try{
+      h = await window.showSaveFilePicker({ suggestedName:'dwcs-backup.txt', types:[{description:'Text', accept:{'text/plain':['.txt']}}] });
+      await __dwcs_idb_set('txtHandle', h);
+    }catch(e){ return null; }
+  }
+  // Ensure permission
+  if (h && h.queryPermission){
+    let p = await h.queryPermission({mode:'readwrite'});
+    if (p !== 'granted' && h.requestPermission){
+      p = await h.requestPermission({mode:'readwrite'});
+      if (p !== 'granted') return null;
+    }
+  }
+  return h;
+}
+
+async function __dwcs_ensureJsonHandle(){
+  let h = await __dwcs_idb_get('jsonHandle');
+  if(!h){
+    if(!window.showSaveFilePicker){
+      // Non-support: do nothing (we already handle TXT fallback). User can export JSON manual.
+      return null;
+    }
+    try{
+      h = await window.showSaveFilePicker({ suggestedName:'dwcs-backup.json', types:[{description:'JSON', accept:{'application/json':['.json']}}] });
+      await __dwcs_idb_set('jsonHandle', h);
+    }catch(e){ return null; }
+  }
+  if (h && h.queryPermission){
+    let p = await h.queryPermission({mode:'readwrite'});
+    if (p !== 'granted' && h.requestPermission){
+      p = await h.requestPermission({mode:'readwrite'});
+      if (p !== 'granted') return null;
+    }
+  }
+  return h;
+}
+
+async function __dwcs_autoExport(){
+  if (localStorage.getItem('dwcs_auto_save') !== '1') return;
+  try{
+    const jobs = __dwcs_getLocalJobs();
+    // TXT: ensure handle and write current full TXT snapshot
+    const hTxt = await __dwcs_ensureTxtHandle();
+    if (hTxt){
+      const content = __dwcs_renderTXTFromJobs(jobs);
+      await __dwcs_writeFile(hTxt, content);
+      __dwcs_toast('Auto-saved', 'Auto-guardado');
+    }
+    // JSON: optional if user previously picked a JSON handle
+    const hJson = await __dwcs_ensureJsonHandle();
+    if (hJson){
+      const content = JSON.stringify(jobs, null, 2);
+      await __dwcs_writeFile(hJson, content);
+      __dwcs_toast('Auto-saved JSON', 'JSON auto-guardado');
+    }
+  }catch(_){/* ignore */}
+}
+// =====================================================================
 
 // Backup dialog
 document.getElementById('btnBackup').addEventListener('click', ()=>{ document.getElementById('backupDlg').showModal(); document.getElementById('autoSave').checked = localStorage.getItem('dwcs_auto_save')==='1'; refreshLocalInfo(); __ensureExportWiring(); });
