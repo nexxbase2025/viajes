@@ -48,7 +48,7 @@ const STR = {
       backup:"Set backup",backup_desc:"Backups are stored on this device. You can export a JSON file anytime.",backup_auto:"Auto‑save summaries",
       export_json:"Export JSON",clear_local:"Clear local",
       send_whatsapp:"Send WhatsApp",send_sms:"Send SMS",send_email:"Send Email",empty:"(empty)",
-      saved_local:"Saved locally.", saved_server_fail:"Could not save to server. Saved locally instead."
+      saved_local:"Saved locally.", saved_server_fail:"Saved locally instead."
   },
   es:{install:"Instalar",signout:"Cerrar sesión",welcome:"Bienvenido",signin:"Inicia sesión para continuar",
       new_dispatch:"Nuevo despacho",client:"Cliente / Solicitante",client_phone:"Teléfono/correo del cliente",
@@ -68,7 +68,7 @@ const STR = {
       backup:"Configurar respaldo",backup_desc:"Los respaldos se guardan en este dispositivo. Puedes exportar un archivo JSON cuando quieras.",backup_auto:"Auto‑guardar resúmenes",
       export_json:"Exportar JSON",clear_local:"Borrar local",
       send_whatsapp:"Enviar WhatsApp",send_sms:"Enviar SMS",send_email:"Enviar Email",empty:"(vacío)",
-      saved_local:"Guardado localmente.", saved_server_fail:"No se pudo guardar en el servidor. Guardado localmente."
+      saved_local:"Guardado localmente.", saved_server_fail:"Guardado localmente."
   }
 };
 function getLang(){ const forced=localStorage.getItem('tf_lang_forced'); if(forced && forced!=='auto') return forced; return (navigator.language||'es').toLowerCase().startsWith('es')?'es':'en'; }
