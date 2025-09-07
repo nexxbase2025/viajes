@@ -45,10 +45,10 @@ const STR = {
       ok:"OK",close:"Close",dispatcher:"Dispatcher",driver_role:"Driver",user:"User",
       alert_fill:"Complete origin and destination",alert_pick_driver:"Pick a driver",
       saved:"Saved and sent to driver.",login_error:"Login error: ",installed:"Installed",
-      backup:"Set backup",backup_desc:"Backups are stored on this device. You can export a JSON file anytime.",backup_auto:"Auto‑save summaries",
+      backup:"Set backup",backup_desc:"Backups are stored on this device. You can export a JSON file anytime.",backup_auto:"Auto-save summaries",
       export_json:"Export JSON",clear_local:"Clear local",
       send_whatsapp:"Send WhatsApp",send_sms:"Send SMS",send_email:"Send Email",empty:"(empty)",
-      saved_local:"Saved locally.", saved_server_fail:"Saved locally instead."
+      saved_local:"Saved locally.", saved_server_fail:"Could not save to server. Saved locally instead."
   },
   es:{install:"Instalar",signout:"Cerrar sesión",welcome:"Bienvenido",signin:"Inicia sesión para continuar",
       new_dispatch:"Nuevo despacho",client:"Cliente / Solicitante",client_phone:"Teléfono/correo del cliente",
@@ -65,10 +65,10 @@ const STR = {
       ok:"OK",close:"Cerrar",dispatcher:"Despachador",driver_role:"Conductor",user:"Usuario",
       alert_fill:"Completa origen y destino",alert_pick_driver:"Selecciona un conductor",
       saved:"Despacho guardado y enviado al conductor.",login_error:"Error de inicio de sesión: ",installed:"Instalada",
-      backup:"Configurar respaldo",backup_desc:"Los respaldos se guardan en este dispositivo. Puedes exportar un archivo JSON cuando quieras.",backup_auto:"Auto‑guardar resúmenes",
+      backup:"Configurar respaldo",backup_desc:"Los respaldos se guardan en este dispositivo. Puedes exportar un archivo JSON cuando quieras.",backup_auto:"Auto-guardar resúmenes",
       export_json:"Exportar JSON",clear_local:"Borrar local",
       send_whatsapp:"Enviar WhatsApp",send_sms:"Enviar SMS",send_email:"Enviar Email",empty:"(vacío)",
-      saved_local:"Guardado localmente.", saved_server_fail:"Guardado localmente."
+      saved_local:"Guardado localmente.", saved_server_fail:"No se pudo guardar en el servidor. Guardado localmente."
   }
 };
 function getLang(){ const forced=localStorage.getItem('tf_lang_forced'); if(forced && forced!=='auto') return forced; return (navigator.language||'es').toLowerCase().startsWith('es')?'es':'en'; }
@@ -145,8 +145,7 @@ async function refreshKPIs(){
   }catch(e){ /* ignore */ }
 
   // Local
-  getLocalJobs().forEach(j=>{ const when=j.pickupAt? new Date(j.pickupAt):null; if(!when) return;
-    const line=`${when.toLocaleString(getLang()==='es'?'es-ES':'en-US')} — ${j.passenger} · ${j.from} → ${j.to} · $${j.price||'-'} (local)`;
+  getLocalJobs().forEach(j=>{ const when=j.pickupAt? new Date(j.pickupAt):null; const line=`${when?when.toLocaleString(getLang()==='es'?'es-ES':'en-US'):'-'} — ${j.passenger} · ${j.from} → ${j.to} · $${j.price||'-'} (local)`; if(!when) return;
     if(when.toDateString()===todayStr) itemsToday.push(line);
     if(when>now) itemsFuture.push(line);
   });
@@ -260,6 +259,7 @@ document.getElementById('btnBackup').addEventListener('click', ()=>{ document.ge
 document.getElementById('btnSaveNow').addEventListener('click', ()=>{ const {data}=renderPreview(); saveLocalJob({...data,status:'draft'}); refreshLocalInfo(); refreshKPIs(); alert(t('saved_local')); });
 document.getElementById('autoSave').addEventListener('change', (e)=>{ localStorage.setItem('dwcs_auto_save', e.target.checked ? '1':'0'); });
 document.getElementById('btnExport').addEventListener('click', (e)=>{ e.preventDefault(); const data = JSON.stringify(getLocalJobs(), null, 2); const blob=new Blob([data],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='dwcs-backup.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 1000); });
+document.getElementById('btnExportTXT').addEventListener('click', (e)=>{ e.preventDefault(); const arr=getLocalJobs(); const lines=arr.map((j,i)=>`#${i+1} ${j.passenger||'-'} — ${j.from||'-'} → ${j.to||'-'}`); const blob=new Blob([lines.join('\\n')],{type:'text/plain'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='dwcs-backup.txt'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 1000); });
 document.getElementById('btnClearLocal').addEventListener('click', (e)=>{ e.preventDefault(); if(confirm('Clear local data?')){ localStorage.removeItem('dwcs_jobs'); refreshLocalInfo(); refreshKPIs(); } });
 
 // PWA install + SW
@@ -326,3 +326,93 @@ if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator
 
 // Initial
 applyI18n();
+landing();
+
+
+/* === DWCS Export Save-As Patch (embedded) ==================================
+   Purpose: Make "Export JSON" and "Export TXT" ask where to save (when supported)
+   Scope:   Only touches export buttons. Safe to append to the end of app.js.
+   =========================================================================== */
+(function(){
+  if (window.__dwcs_export_patch__) return;
+  window.__dwcs_export_patch__ = 1;
+
+  function langIsEs(){
+    try { return (typeof getLang==='function') ? (getLang()==='es') : (navigator.language||'en').toLowerCase().startsWith('es'); }
+    catch(_){ return false; }
+  }
+
+  async function pickAndSaveFile({ suggestedName, mimeType, data }){
+    if (window.showSaveFilePicker){
+      try{
+        const handle = await window.showSaveFilePicker({
+          suggestedName,
+          types: [{ description: mimeType.includes('json')?'JSON':'Text', accept: { [mimeType]: [mimeType.includes('json')?'.json':'.txt'] } }]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(data);
+        await writable.close();
+        return true;
+      }catch(e){
+        return false; // user canceled
+      }
+    }
+    // Fallback: classic download (goes to Downloads unless user set 'Ask where to save each file')
+    const blob = new Blob([data], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = suggestedName; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    try{
+      if (!localStorage.getItem('dwcs_save_tip_shown')){
+        alert(langIsEs()
+          ? "Tu navegador guardó el archivo en la carpeta de Descargas por defecto. Si quieres elegir carpeta siempre, activa 'Preguntar dónde guardar' en la configuración del navegador."
+          : "Your browser saved the file to the default Downloads folder. If you want to choose a folder every time, enable 'Ask where to save each file' in your browser settings.");
+        localStorage.setItem('dwcs_save_tip_shown','1');
+      }
+    }catch(_){}
+    return true;
+  }
+
+  function replaceClickHandler(id, handler){
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.setAttribute('type','button'); // avoid <dialog> auto-close
+    const clone = btn.cloneNode(true);
+    clone.addEventListener('click', handler);
+    btn.parentNode.replaceChild(clone, btn);
+  }
+
+  replaceClickHandler('btnExport', async function(e){
+    e.preventDefault(); e.stopPropagation();
+    try{
+      const data = JSON.stringify(getLocalJobs(), null, 2);
+      await pickAndSaveFile({ suggestedName: 'dwcs-backup.json', mimeType: 'application/json', data });
+    }catch(_){}
+  });
+
+  replaceClickHandler('btnExportTXT', async function(e){
+    e.preventDefault(); e.stopPropagation();
+    try{
+      const arr = (typeof getLocalJobs==='function') ? getLocalJobs() : [];
+      const es = langIsEs();
+      const lines = arr.map((j,i)=>{
+        const lang = es ? 'es-ES' : 'en-US';
+        const when = j.pickupAt ? new Date(j.pickupAt).toLocaleString(lang) : '-';
+        const head = `#${i+1} ${j.passenger||'-'} — ${j.from||'-'} → ${j.to||'-'}`;
+        const body = [
+          (es?'Fecha/Hora: ':'Date/Time: ') + when,
+          (es?'Precio: ':'Price: ') + (j.price ?? '-'),
+          (es?'Acompañantes: ':'Companions: ') + (j.companions ?? '-'),
+          (es?'Necesidades: ':'Needs: ') + (j.acc || j.needs || 'N/A'),
+          (es?'Ruta: ':'Route: ') + (j.mapUrl || '-'),
+          (es?'Cliente: ':'Client: ') + (j.clientName || '-') + ' (' + (j.clientContact || '-') + ')',
+          (es?'Notas: ':'Notes: ') + (j.notes || '-')
+        ].join('\\n');
+        return head + '\\n' + body;
+      });
+      const content = lines.join('\\n\\n----------------------------------------\\n\\n');
+      await pickAndSaveFile({ suggestedName: 'dwcs-backup.txt', mimeType: 'text/plain', data: content });
+    }catch(_){}
+  });
+})();
