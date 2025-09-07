@@ -254,8 +254,108 @@ document.getElementById('sendToWA').addEventListener('click',(e)=>{ e.preventDef
 document.getElementById('sendToSMS').addEventListener('click',(e)=>{ e.preventDefault(); const to=document.getElementById('clientSendTo').value.replace(/\D/g,''); const {msg}=renderPreview(); if(!to) return; const body=encodeURIComponent(msg); const url = navigator.userAgent.match(/(iPhone|iPad)/) ? `sms:${to}&body=${body}` : `sms:${to}?body=${body}`; location.href=url; });
 document.getElementById('sendToEmail').addEventListener('click',(e)=>{ e.preventDefault(); const to=document.getElementById('clientSendTo').value.trim(); const {msg}=renderPreview(); if(!to) return; const subject=encodeURIComponent('Dispatch'); window.open(`mailto:${to}?subject=${subject}&body=${encodeURIComponent(msg)}`,'_blank'); });
 
+
+// ===== Export helpers (module-safe) ==================================
+function __langIsEs(){ try { return getLang()==='es'; } catch(_) { try { return (navigator.language||'en').toLowerCase().startsWith('es'); } catch(__){ return false; } } }
+function __injectToastStyles(){
+  if (document.getElementById('dwcs_toast_css')) return;
+  const css = document.createElement('style'); css.id='dwcs_toast_css';
+  css.textContent = '.dwcs-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);padding:10px 14px;border-radius:10px;border:1px solid rgba(0,0,0,.15);background:rgba(20,20,25,.92);color:#fff;font:600 14px/1.1 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:2147483647;opacity:0;transition:opacity .18s ease} .dwcs-toast.show{opacity:1}';
+  document.head.appendChild(css);
+}
+function __toast(msgEn, msgEs){
+  __injectToastStyles();
+  const el = document.createElement('div'); el.className='dwcs-toast'; el.textContent = (__langIsEs() ? (msgEs||msgEn) : (msgEn||msgEs));
+  document.body.appendChild(el);
+  requestAnimationFrame(()=>el.classList.add('show'));
+  setTimeout(()=>{ el.classList.remove('show'); setTimeout(()=>el.remove(), 200); }, 1800);
+}
+async function __pickAndSaveFile({ suggestedName, mimeType, data }){
+  if (window.showSaveFilePicker){
+    try{
+      const handle = await window.showSaveFilePicker({
+        suggestedName,
+        types: [{ description: mimeType.includes('json')?'JSON':'Text', accept: { [mimeType]: [mimeType.includes('json')?'.json':'.txt'] } }]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(data);
+      await writable.close();
+      return true;
+    }catch(e){ return false; }
+  }
+  const blob=new Blob([data],{type:mimeType}); const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=suggestedName; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  try{
+    if(!localStorage.getItem('dwcs_save_tip_shown')){
+      alert(__langIsEs()
+        ? "Tu navegador guardó el archivo en la carpeta de Descargas por defecto. Para elegir carpeta siempre, activa 'Preguntar dónde guardar' en la configuración del navegador."
+        : "Your browser saved the file to the default Downloads folder. To choose a folder every time, enable 'Ask where to save each file' in your browser settings.");
+      localStorage.setItem('dwcs_save_tip_shown','1');
+    }
+  }catch(_){}
+  return true;
+}
+function __getLocalJobsSafe(){ try{ return JSON.parse(localStorage.getItem('dwcs_jobs')||'[]'); }catch(_){ return []; } }
+function __ensureTypeButton(el){ if(el) el.setAttribute('type','button'); }
+function __ensureExportWiring(){
+  const btnJ = document.getElementById('btnExport');
+  const btnT = document.getElementById('btnExportTXT');
+  const btnC = document.getElementById('btnClearLocal');
+  // Prevent dialog auto-close
+  [btnJ, btnT, btnC].forEach(__ensureTypeButton);
+  // Wire once
+  if(btnJ && !btnJ.dataset.wired){
+    btnJ.dataset.wired='1';
+    btnJ.addEventListener('click', async (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      const data = JSON.stringify(__getLocalJobsSafe(), null, 2);
+      const ok = await __pickAndSaveFile({ suggestedName:'dwcs-backup.json', mimeType:'application/json', data });
+      if(ok){ try{ document.getElementById('backupDlg')?.close(); }catch(_){ } __toast('Saved','Guardado'); }
+    });
+  }
+  if(btnT && !btnT.dataset.wired){
+    btnT.dataset.wired='1';
+    btnT.addEventListener('click', async (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      const es=__langIsEs(); const arr=__getLocalJobsSafe();
+      const lines = arr.map((j,i)=>{
+        const when = j.pickupAt ? new Date(j.pickupAt).toLocaleString(es?'es-ES':'en-US') : '-';
+        const head = `#${i+1} ${j.passenger||'-'} — ${j.from||'-'} → ${j.to||'-'}`;
+        const body = [
+          (es?'Fecha/Hora: ':'Date/Time: ')+when,
+          (es?'Precio: ':'Price: ')+(j.price ?? '-'),
+          (es?'Acompañantes: ':'Companions: ')+(j.companions ?? '-'),
+          (es?'Necesidades: ':'Needs: ')+(j.acc || j.needs || 'N/A'),
+          (es?'Ruta: ':'Route: ')+(j.mapUrl || '-'),
+          (es?'Cliente: ':'Client: ')+(j.clientName || '-')+' ('+(j.clientContact || '-')+')',
+          (es?'Notas: ':'Notes: ')+(j.notes || '-')
+        ].join('\\n');
+        return head + '\\n' + body;
+      });
+      const content = lines.join('\\n\\n----------------------------------------\\n\\n');
+      const ok = await __pickAndSaveFile({ suggestedName:'dwcs-backup.txt', mimeType:'text/plain', data:content });
+      if(ok){ try{ document.getElementById('backupDlg')?.close(); }catch(_){ } __toast('Saved','Guardado'); }
+    });
+  }
+  if(btnC && !btnC.dataset.wired){
+    btnC.dataset.wired='1';
+    btnC.addEventListener('click', (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      const es=__langIsEs();
+      const sure = confirm(es ? '¿Borrar datos locales? Esta acción no se puede deshacer.' : 'Clear local data? This action cannot be undone.');
+      if(!sure) return;
+      try{ localStorage.removeItem('dwcs_jobs'); }catch(_){}
+      // Update minimal UI
+      const li=document.getElementById('localInfo'); if(li) li.textContent = es ? '0 elementos locales • 0 hoy' : '0 local items • 0 today';
+      try{ document.getElementById('backupDlg')?.close(); }catch(_){}
+      __toast('Cleared','Borrado');
+    });
+  }
+}
+
 // Backup dialog
-document.getElementById('btnBackup').addEventListener('click', ()=>{ document.getElementById('backupDlg').showModal(); document.getElementById('autoSave').checked = localStorage.getItem('dwcs_auto_save')==='1'; refreshLocalInfo(); });
+document.getElementById('btnBackup').addEventListener('click', ()=>{ document.getElementById('backupDlg').showModal(); document.getElementById('autoSave').checked = localStorage.getItem('dwcs_auto_save')==='1'; refreshLocalInfo(); __ensureExportWiring(); });
 document.getElementById('btnSaveNow').addEventListener('click', ()=>{ const {data}=renderPreview(); saveLocalJob({...data,status:'draft'}); refreshLocalInfo(); refreshKPIs(); alert(t('saved_local')); });
 document.getElementById('autoSave').addEventListener('change', (e)=>{ localStorage.setItem('dwcs_auto_save', e.target.checked ? '1':'0'); });
 document.getElementById('btnExport').addEventListener('click', (e)=>{ e.preventDefault(); const data = JSON.stringify(getLocalJobs(), null, 2); const blob=new Blob([data],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='dwcs-backup.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 1000); });
@@ -415,4 +515,51 @@ landing();
       await pickAndSaveFile({ suggestedName: 'dwcs-backup.txt', mimeType: 'text/plain', data: content });
     }catch(_){}
   });
+})();
+
+/* === DWCS Export UX Addon (toast + auto-close) ======================= */
+(function(){
+  if (window.__dwcs_export_ux_addon__) return; window.__dwcs_export_ux_addon__ = 1;
+
+  function langIsEs(){
+    try { return (typeof getLang==='function') ? (getLang()==='es') : (navigator.language||'en').toLowerCase().startsWith('es'); }
+    catch(_){ return false; }
+  }
+  function injectToastStyles(){
+    if (document.getElementById('dwcs_toast_css')) return;
+    var css = document.createElement('style'); css.id='dwcs_toast_css';
+    css.textContent = '.dwcs-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);padding:10px 14px;border-radius:10px;border:1px solid rgba(0,0,0,.15);background:rgba(20,20,25,.92);color:#fff;font:600 14px/1.1 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:2147483647;opacity:0;transition:opacity .18s ease} .dwcs-toast.show{opacity:1}';
+    document.head.appendChild(css);
+  }
+  function showToast(msgEn, msgEs){
+    injectToastStyles();
+    var text = langIsEs() ? (msgEs || msgEn) : (msgEn || msgEs);
+    var el = document.createElement('div'); el.className='dwcs-toast'; el.textContent=text; document.body.appendChild(el);
+    requestAnimationFrame(function(){ el.classList.add('show'); });
+    setTimeout(function(){ el.classList.remove('show'); setTimeout(function(){ el.remove(); }, 200); }, 1800);
+  }
+
+  function wrapExport(id, getPayload){
+    var btn = document.getElementById(id);
+    if (!btn) return;
+    var handler = async function(e){
+      // Let the existing handler run first, then our UX
+      // We'll intercept the click after a microtask to detect the result via a flag
+      // Instead, we add our own download using File System Access API if available
+      // but here, since we already patched export, we only add UX.
+      setTimeout(function(){
+        try { document.getElementById('backupDlg')?.close(); } catch(_){}
+        showToast('Saved', 'Guardado');
+      }, 0);
+    };
+    btn.addEventListener('click', handler);
+  }
+
+  function init(){
+    wrapExport('btnExport');
+    wrapExport('btnExportTXT');
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
 })();
